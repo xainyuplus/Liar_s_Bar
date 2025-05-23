@@ -35,3 +35,5 @@ class Room {
     // 广播游戏状态
   }
 }
+
+module.exports = Room;

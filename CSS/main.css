@@ -1,1 +1,11 @@
 /* main css */ 
+.creatDiv{
+/*这是一个创建房间的小窗口，居中显示*/
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+
+
+
+}

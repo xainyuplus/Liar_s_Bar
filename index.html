@@ -6,12 +6,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="./CSS/main.css">
  </head>
+  <script src="./JS/main.js"></script>
+  <script type="module" src="./JS/socket-client.js" ></script>
+  <script>
+    // 点击按钮创建房间
+    //创建房间的方式是，向后端发送一个请求，仅包括房主id
+    //测试阶段，房主id固定为2233，后期会由数据库记录
+    //后端将返回房间id，此时前端生成一个类似弹窗的页面，显示id和已经加入房间的人，还有x号
+    //点击x号会有提示，之后退出房间，向后端发信息，之后房间销毁
+    //人数达到4个后点击确定可以开始游戏，也可以点击人机模式，之后进入游戏页面
+ </script>
  <body>
     <h1>欢迎来到游戏大厅</h1>
-    <h2>点击下方按钮进入游戏</h2>
     <h2>点击下方按钮创建房间</h2>
-        <button>创建房间</button>
-   
+      <button onclick="creatRoom(2233)">创建房间</button>
+   <h2>点击下方按钮加入房间</h2>
+      <button onclick="joinRoom()">加入房间</button>
  </body>
+
+
+
  </html>

@@ -40,3 +40,4 @@ class GameManager {
     // 检查游戏是否结束
   }
 }
+module.exports = GameManager;
