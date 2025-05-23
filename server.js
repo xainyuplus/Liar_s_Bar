@@ -6,7 +6,7 @@ const { Server } = require('socket.io');
 const app = express();
 const port = 3000;
 const Room = require('./game/Room'); // 导入 Room 类
-const rooms = {}; // 存储所有房间的对象
+const rooms = new Map(); // 存储所有房间的对象
 const socketManager = require('./socket/socketManager'); // 导入 socket 注册函数
 // 内置中间件：自动解析 JSON 请求体
 app.use(express.json());
@@ -14,7 +14,6 @@ app.use(express.json());
 // 创建 HTTP 和 WebSocket 服务器
 const server = http.createServer(app);
 const io = new Server(server);
-
 
 
 // 静态文件服务
@@ -28,9 +27,12 @@ app.get('/', (req, res) => {
 });
 
 // WebSocket 连接处理
-socketManager(io); // 注册 socket 事件处理函数
+socketManager(io,rooms); // 注册 socket 事件处理函数
+
+
 
 // 启动服务器
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+//这里之前写的是app.listen,是不行的，必须server

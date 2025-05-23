@@ -2,6 +2,10 @@
 import { io } from "socket.io-client";
   const socket = io("http://localhost:3000");
 
+document.getElementById("createBtn").addEventListener("click", () => {
+  createRoom(2233);
+});
+
   function createRoom(hostId) {
     socket.emit('create_room',hostId); // 发送创建房间请求
   }

@@ -1,10 +1,12 @@
 // Room management 
+const GameManager = require('./GameManager');
+const Player = require('./Player');
 class Room {
   constructor(id, hostId) {
     this.id = id;                // 房间ID
     this.hostId = hostId;        // 房主ID
-    this.players = [];           // 玩家列表
-    this.gameState = null;       // 游戏状态
+    this.players =new Map();           // 玩家列表
+    this.gameManager = new GameManager(this);      // 游戏状态
     this.deck = null;            // 牌堆
     this.phase = 'WAITING';      // 房间阶段：WAITING, PLAYING, ENDED
     this.spectators = [];        // 观众（非玩家）
@@ -15,9 +17,11 @@ class Room {
     };
   }
   
-  addPlayer(player) {
-    // 添加玩家
+ addPlayer(playerInfo) {
+    const player = new Player(playerInfo);
+    this.players.set(player.id, player);
   }
+
   
   removePlayer(playerId) {
     // 移除玩家
