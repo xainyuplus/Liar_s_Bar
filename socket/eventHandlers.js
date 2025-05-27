@@ -21,10 +21,39 @@ module.exports = function(socket, io, rooms) {
     playerInfo.id = socket.id; // 以 socket.id 作为 player 的唯一 id
     room.addPlayer(playerInfo);
     socket.join(roomId);
-    io.to(roomId).emit('player_joined', playerInfo); // 通知所有用户有新玩家加入
+    io.to(roomId).emit('player_joined', playerInfo,room.players.size); // 通知所有用户有新玩家加入
     socket.emit('room_joined', roomId); // 通知当前用户已加入房间
     console.log(`Player ${playerInfo.name} joined room ${roomId}`); // 打印玩家加入信息
 });
+
+    // 处理开始游戏请求
+    socket.on('start_game', ({ roomId}) => {
+        
+    })
+    // 处理玩家出牌请求
+    socket.on('play_cards', ({ roomId, cardsInfo }) => {
+        
+    })
+    // 处理质疑请求
+    socket.on('challenge', ({ roomId }) => {
+        
+    })
+    //处理信任
+    socket.on('trust', ({ roomId}) => {
+        
+    })
+    //进行轮盘赌
+    socket.on('spin_roulette', ({ roomId}) => {
+        
+    })
+    //离开房间
+    socket.on('leave_room', ({ roomId}) => {
+        
+    })
+    // 重新连接
+    socket.on('reconnect', ({ roomId }) => {
+        
+    })
 }
 
 

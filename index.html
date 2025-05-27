@@ -44,7 +44,7 @@
       socket.emit('join_room', {
          roomId,
          playerInfo: {
-            id: 2233,
+            id: "房主id",
             name: "房主名字",
             avatar: "avatar.png",
             isHost: true
@@ -52,9 +52,16 @@
       }); // 发送加入房间请求
       console.log("发送了加入房间请求");
    })
-
-   //接下来就是展示一个房间页面（div），最上方显示房间号，然后是四个人待加入的场景，下方是两个按钮：准备 和人机对局
+   //房间创建成功后展示一个房间加入页面（div），最上方显示房间号，然后是四个人待加入的场景，下方是两个按钮：准备 和人机对局
    //点击人机对局后
+
+   //接收广播的玩家加入事件，用于同步更新玩家加入界面，类似王者荣耀匹配后的确认
+   socket.on('player_joined', (playerInfo) => {
+      
+      console.log(`Player joined: ${playerInfo.name}`); // 接收玩家加入的消息
+   })
+
+
 
 
 

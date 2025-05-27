@@ -25,6 +25,12 @@ class Room {
   
   removePlayer(playerId) {
     // 移除玩家
+    const isRemoved = this.players.delete(playerId);
+    if (isRemoved) {
+      console.log(`玩家 ${playerId} 已从房间 ${this.id} 中移除`);
+    } else {
+      console.log(`未找到玩家 ${playerId}，移除失败`);
+    }
   }
   
   startGame() {
