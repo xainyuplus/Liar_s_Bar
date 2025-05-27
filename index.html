@@ -10,6 +10,7 @@
    <link rel="stylesheet" href="./CSS/main.css">
 </head>
 <script src="./JS/main.js"></script>
+<script src="./JS/utils/animationUtils.js"></script>
 
 
 <body>
@@ -28,8 +29,14 @@
    //后端将返回房间id，此时前端生成一个类似弹窗的页面，显示id和已经加入房间的人，还有x号
    //点击x号会有提示，之后退出房间，向后端发信息，之后房间销毁
    //人数达到4个后点击确定可以开始游戏，也可以点击人机模式，之后进入游戏页面
+ 
    const socket = io("http://localhost:3000");
-
+   const thisplayerInfo = {
+            id: "玩家id",
+            name: "玩家名字",
+            avatar: "avatar.png",
+            isHost: true
+        };
    function createRoom(hostId) {
       socket.emit('create_room', hostId); // 发送创建房间请求
    }
@@ -38,32 +45,50 @@
       createRoom(2233);
    });
 
+   function joinRoom() {
+      // 弹出一个输入框，让用户输入房间ID
+      const roomId = prompt("请输入房间ID:");
+      if (roomId) {
+         // 发送加入房间请求
+         socket.emit('join_room', {
+            roomId,
+            playerInfo:thisplayerInfo
+         }); 
+         //注意一个问题，发送信息是 如果直接穿变量，前端后端名字应一致，要么就像这样 playerInfo:thisplayerInfo，后端用playerInfo接收
+      }
+      
+   }
+   function startGame() {
+      
+   }
+   function closeDiv(){
+
+   }
+</script>
+<script>
    socket.on('room_created', (roomId) => {
       console.log(`Room created with ID: ${roomId}`); // 接收创建成功的消息 
       localStorage.setItem('roomId', roomId); //把房间ID保存到本地存储中
       socket.emit('join_room', {
          roomId,
-         playerInfo: {
-            id: "房主id",
-            name: "房主名字",
-            avatar: "avatar.png",
-            isHost: true
-         }
+         playerInfo: thisplayerInfo
       }); // 发送加入房间请求
       console.log("发送了加入房间请求");
+      const players_Div = playersDiv(roomId);
+      //在这里添加一下监听器，一个是关闭，一个是开始游戏
+
+      //如果玩家非房主的话，隐藏开始游戏按钮
+
+
+      document.body.appendChild(players_Div);
    })
-   //房间创建成功后展示一个房间加入页面（div），最上方显示房间号，然后是四个人待加入的场景，下方是两个按钮：准备 和人机对局
+   //房间创建成功后或加入游戏成功后展示一个房间加入页面（div），类似，显示房间号，然后是四个人的头像（未加入的位置显示为空白），下方是两个按钮：准备 和人机对局
    //点击人机对局后
 
    //接收广播的玩家加入事件，用于同步更新玩家加入界面，类似王者荣耀匹配后的确认
    socket.on('player_joined', (playerInfo) => {
-      
       console.log(`Player joined: ${playerInfo.name}`); // 接收玩家加入的消息
    })
-
-
-
-
 
 
 </script>
