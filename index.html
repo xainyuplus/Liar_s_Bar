@@ -11,7 +11,8 @@
 </head>
 <script src="./JS/main.js"></script>
 <script src="./JS/utils/animationUtils.js"></script>
-
+<!-- 引入 SweetAlert2 库 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <body>
    <h1>欢迎来到游戏大厅</h1>
@@ -29,14 +30,14 @@
    //后端将返回房间id，此时前端生成一个类似弹窗的页面，显示id和已经加入房间的人，还有x号
    //点击x号会有提示，之后退出房间，向后端发信息，之后房间销毁
    //人数达到4个后点击确定可以开始游戏，也可以点击人机模式，之后进入游戏页面
- 
+
    const socket = io("http://localhost:3000");
    const thisplayerInfo = {
-            id: "玩家id",
-            name: "玩家名字",
-            avatar: "avatar.png",
-            isHost: true
-        };
+      id: "玩家id",
+      name: "玩家名字",
+      avatar: "avatar1.png",
+      isHost: true
+   };
    function createRoom(hostId) {
       socket.emit('create_room', hostId); // 发送创建房间请求
    }
@@ -52,16 +53,47 @@
          // 发送加入房间请求
          socket.emit('join_room', {
             roomId,
-            playerInfo:thisplayerInfo
-         }); 
+            playerInfo: thisplayerInfo
+         });
          //注意一个问题，发送信息是 如果直接穿变量，前端后端名字应一致，要么就像这样 playerInfo:thisplayerInfo，后端用playerInfo接收
       }
-      
+
    }
    function startGame() {
-      
+      //如果是房主的话，开始游戏会自动用机器人来代替不足的人
    }
-   function closeDiv(){
+   function closeDiv() {
+      //弹窗:你确认要退出房间吗？
+      //房主与非房主都一样
+
+      Swal.fire({
+         title: '你确认要退出房间吗？',
+         text: "你将无法再加入该房间",
+         icon: 'warning',
+         showCancelButton: true,
+         confirmButtonColor: '#3085d6',
+         cancelButtonColor: '#d33',
+         confirmButtonText: '退出',
+         cancelButtonText: '取消'
+      }).then((result) => {
+         if (result.isConfirmed) {
+            if (thisplayerInfo.isHost) {
+               socket.emit('close_room', { roomId: localStorage.getItem('roomId') }); // 发送关闭房间请求
+            } else {
+               socket.emit('leave_room', { roomId: localStorage.getItem('roomId') }); // 发送离开房间请求
+            }
+         }
+      });
+
+
+
+      Swal.fire({
+         position: 'center',
+         icon: 'success',
+         title: '操作成功！',
+         showConfirmButton: false,
+         timer: 1500
+      });
 
    }
 </script>
@@ -74,10 +106,21 @@
          playerInfo: thisplayerInfo
       }); // 发送加入房间请求
       console.log("发送了加入房间请求");
+
       const players_Div = playersDiv(roomId);
       //在这里添加一下监听器，一个是关闭，一个是开始游戏
-
+      players_Div.querySelector('#closeButton').addEventListener('click', () => {
+         closeDiv(); // 调用关闭函数
+      });
+      players_Div.querySelector('#startButton').addEventListener('click', () => {
+         startGame(); // 调用开始游戏函数
+      });
       //如果玩家非房主的话，隐藏开始游戏按钮
+      if (!thisplayerInfo.isHost) {
+         players_Div.querySelector('#startButton').style.display = 'none';
+      }
+
+
 
 
       document.body.appendChild(players_Div);
@@ -85,9 +128,28 @@
    //房间创建成功后或加入游戏成功后展示一个房间加入页面（div），类似，显示房间号，然后是四个人的头像（未加入的位置显示为空白），下方是两个按钮：准备 和人机对局
    //点击人机对局后
 
-   //接收广播的玩家加入事件，用于同步更新玩家加入界面，类似王者荣耀匹配后的确认
+   //接收广播的玩家加入事件，用于同步更新玩家加入界面
    socket.on('player_joined', (playerInfo) => {
       console.log(`Player joined: ${playerInfo.name}`); // 接收玩家加入的消息
+      //显示玩家加入的弹窗
+      Swal.fire({
+         position: 'center',
+         icon: 'info',
+         title: `${playerInfo.name} 加入了房间`,
+         showConfirmButton: false,
+         timer: 1500
+      });
+      //更新玩家加入界面
+
+      Array.from(document.getElementById('playersDiv').querySelectorAll('#avatarsContainer img')).some((player_avatar, index) => {
+         console.log(player_avatar);
+         if (player_avatar.getAttribute('data-avatar') == "false") {
+            player_avatar.src = `./assets/images/avatars/${playerInfo.avatar}`;
+            player_avatar.setAttribute('data-avatar', "true");
+            return true;
+         }
+
+      });
    })
 
 
