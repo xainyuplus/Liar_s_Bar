@@ -1,425 +1,416 @@
 <!DOCTYPE html>
-<!-- 这个页面是游戏进行场景和游戏结算场景 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>扑克牌游戏</title>
+    <title>骗子酒馆 - 游戏进行</title>
     <style>
-    body {
-        font-family: Arial, sans-serif;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-    
-    .player {
-        width: 100%;
-        min-height: 60px;
-        background-color: #f0f0f0;
-        margin: 10px 0;
-        padding: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        border-radius: 5px;
-    }
-    
-    .card {
-        background-color: white;
-        width: 35px;
-        height: 50px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        user-select: none;
-    }
-    
-    .card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    
-    .card[data-clicked="true"] {
-        background-color: #ddd;
-        transform: translateY(-5px);
-        box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-    }
-    
-    .card:focus {
-        outline: 2px solid #3498db;
-        outline-offset: 1px;
-    }
-    
-    button {
-        background-color: #4CAF50;
-        border: none;
-        color: white;
-        padding: 10px 20px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 14px;
-        margin: 4px 2px;
-        cursor: pointer;
-        border-radius: 4px;
-        transition: background-color 0.2s;
-    }
-    
-    button:hover {
-        background-color: #45a049;
-    }
-    
-    button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-    }
-    
-    #msg {
-        background-color: #ff9800;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-    }
-    
-    .msg {
-        margin: 0 10px;
-    }
-    
-    .playermsg {
-        display: flex;
-        gap: 20px;
-        margin-top: 10px;
-        margin-bottom: 5px;
-    }
-    
-    .desk {
-        width: 100%;
-        min-height: 60px;
-        background-color: #e8f5e9;
-        margin: 10px 0;
-        padding: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        border-radius: 5px;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        
+        /* 游戏状态显示区域 */
+        #game-info {
+            background-color: #34495e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #target-card {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        #current-player {
+            font-size: 18px;
+            color: #3498db;
+        }
+        
+        /* 玩家信息区域 */
+        .players-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .player-info {
+            background-color: #34495e;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+        
+        .player-info.current-player {
+            border-color: #3498db;
+            background-color: #2980b9;
+        }
+        
+        .player-info.my-player {
+            border-color: #27ae60;
+        }
+        
+        .player-info.eliminated {
+            opacity: 0.5;
+            background-color: #7f8c8d;
+        }
+        
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .player-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .player-hp {
+            background-color: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .player-cards {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+        }
+        
+        /* 卡牌样式 */
+        .card {
+            background-color: white;
+            color: #2c3e50;
+            width: 32px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        
+        .card.selected {
+            background-color: #3498db;
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .card.hidden {
+            background-color: #34495e;
+            color: #7f8c8d;
+        }
+        
+        /* 我的手牌区域 */
+        #my-hand-container {
+            background-color: #27ae60;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        #my-hand {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            min-height: 60px;
+        }
+        
+        /* 桌面区域 */
+        #desk-container {
+            background-color: #16a085;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #desk-info {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        #desk-cards {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            min-height: 60px;
+            align-items: center;
+        }
+        
+        /* 操作按钮区域 */
+        #action-panel {
+            background-color: #34495e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        button {
+            background-color: #3498db;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            min-width: 100px;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        
+        button.danger {
+            background-color: #e74c3c;
+        }
+        
+        button.danger:hover:not(:disabled) {
+            background-color: #c0392b;
+        }
+        
+        button.success {
+            background-color: #27ae60;
+        }
+        
+        button.success:hover:not(:disabled) {
+            background-color: #229954;
+        }
+        
+        /* 游戏结束屏幕 */
+        #game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        #game-over-content {
+            background-color: #34495e;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        #winner-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 20px;
+        }
+        
+        .screen {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .screen.hidden {
+            display: none;
+        }
+        
+        /* 轮盘赌模态框 */
+        #roulette-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        #roulette-content {
+            background-color: #34495e;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .roulette-wheel {
+            width: 200px;
+            height: 200px;
+            border: 4px solid #ecf0f1;
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            background-color: #2c3e50;
+        }
+        
+        .roulette-wheel.spinning {
+            animation: spin 2s linear;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(1080deg); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .players-container {
+                grid-template-columns: 1fr;
+            }
+            
+            #my-hand .card,
+            #desk-cards .card {
+                width: 28px;
+                height: 40px;
+                font-size: 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <h3>骗子酒馆</h3>
-    
-    <button onclick="restart()">重新开始</button>
-    <button onclick="cardpush()" id="cardpushBtn" disabled>出牌</button>
-    <button onclick="doubt()" id="doubtBtn" disabled>质疑</button>
-    
-    <div id="msg">
-        <div class="msg">本轮出牌为</div>
-        <div class="msg" id="cardpush">无</div>
-        <div class="msg">当前出牌玩家为</div>
-        <div class="msg" id="playerpush">无</div>
+    <!-- 游戏进行屏幕 -->
+    <div id="game-playing" class="screen">
+        <!-- 游戏状态信息 -->
+        <div id="game-info">
+            <div>
+                <span>目标牌: </span>
+                <span id="target-card">-</span>
+            </div>
+            <div id="current-player">等待开始...</div>
+            <div>
+                <button onclick="returnToLobby()">返回大厅</button>
+            </div>
+        </div>
+        
+        <!-- 其他玩家信息 -->
+        <div class="players-container" id="other-players">
+            <!-- 动态生成其他玩家信息 -->
+        </div>
+        
+        <!-- 桌面区域 -->
+        <div id="desk-container">
+            <div id="desk-info">桌面: 等待出牌</div>
+            <div id="desk-cards">
+                <!-- 动态显示桌面卡牌 -->
+            </div>
+        </div>
+        
+        <!-- 我的手牌 -->
+        <div id="my-hand-container">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <strong>我的手牌</strong>
+            </div>
+            <div id="my-hand">
+                <!-- 动态显示我的手牌 -->
+            </div>
+        </div>
+        
+        <!-- 操作面板 -->
+        <div id="action-panel">
+            <div id="action-message">请选择卡牌并出牌</div>
+            <div class="action-buttons">
+                <button id="play-cards-btn" onclick="playCards()" disabled>
+                    出牌 (0/3)
+                </button>
+                <button id="challenge-btn" onclick="challenge()" disabled class="danger">
+                    质疑
+                </button>
+                <button id="trust-btn" onclick="trust()" disabled class="success">
+                    信任
+                </button>
+            </div>
+        </div>
     </div>
     
-    <div class="playermsg">
-        <div class="msg">玩家1</div>
-        <div class="msg">生命值: <span id="hp1">3</span></div>
-        <div class="msg">其他</div>
+    <!-- 游戏结束屏幕 -->
+    <div id="game-over-screen" class="screen hidden">
+        <div id="game-over-content">
+            <div id="winner-display">游戏结束</div>
+            <div id="game-stats">
+                <!-- 显示游戏统计 -->
+            </div>
+            <div style="margin-top: 30px;">
+                <button onclick="returnToLobby()" style="margin-right: 10px;">
+                    返回大厅
+                </button>
+                <button onclick="playAgain()" class="success">
+                    再来一局
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="player" id="player1"></div>
     
-    <div class="playermsg">
-        <div class="msg">玩家2</div>
-        <div class="msg">生命值: <span id="hp2">3</span></div>
-        <div class="msg">其他</div>
+    <!-- 轮盘赌模态框 -->
+    <div id="roulette-modal" class="screen hidden">
+        <div id="roulette-content">
+            <h2>俄罗斯轮盘赌</h2>
+            <div id="roulette-player">玩家X 正在进行轮盘赌...</div>
+            <div class="roulette-wheel" id="roulette-wheel">🔫</div>
+            <div id="roulette-result" style="margin-top: 20px; font-size: 18px;"></div>
+            <button id="spin-btn" onclick="spinRoulette()" style="margin-top: 20px;" class="hidden">
+                开枪
+            </button>
+        </div>
     </div>
-    <div class="player" id="player2"></div>
-    
-    <div class="playermsg">
-        <div class="msg">玩家3</div>
-        <div class="msg">生命值: <span id="hp3">3</span></div>
-        <div class="msg">其他</div>
-    </div>
-    <div class="player" id="player3"></div>
-    
-    <div class="playermsg">
-        <div class="msg">玩家4</div>
-        <div class="msg">生命值: <span id="hp4">3</span></div>
-        <div class="msg">其他</div>
-    </div>
-    <div class="player" id="player4"></div>
-    <div>桌面</div>
-    <div class="desk" id="desk">牌桌: 无牌</div>
 
-    <script>
-        // 游戏状态
-        var cards = ["J","J","J","J","J","J","Q","Q","Q","Q","Q","Q","K","K","K","K","K","K","joker","joker"];
-        var player1 = new Array();
-        var player2 = new Array();
-        var player3 = new Array();
-        var player4 = new Array();
-        var pushing = new Array(); // 选中要出的牌
-        var buffer = new Array();
-        const allcard = ["J","Q","K"];
-        var nowcard; // 当前要求出的牌
-        var nowplayer = 1; // 当前玩家
-        var playerHP = [2,2,2,2]; // 玩家生命值
-        var lunci = 0
-        var players=new Array();
-        players=[1,2,3,4]
-        var lastPlayer=1
-        function restart(){
-            nowplayer = 1; // 当前玩家
-            playerHP = [2, 2, 2, 2]; // 玩家生命值
-            lunci=0
-            players=[1,2,3,4]
-            Dealcards()
-        }
-        function Dealcards() {
-            // 重置游戏状态
-            player1.length = 0;
-            player2.length = 0;
-            player3.length = 0;
-            player4.length = 0;
-            pushing.length = 0;
-            document.getElementById('desk').textContent = "牌桌: 无牌";
-            updateHPDisplay();
-            // 洗牌算法
-            cards.sort(function() { return 0.5 - Math.random(); });
-            // 发牌
-            for(let i = 0; i < cards.length; i++) {
-                if(i < 5) player1.push(cards[i]);
-                else if(i >= 5 && i < 10) player2.push(cards[i]);
-                else if(i >= 10 && i < 15) player3.push(cards[i]);
-                else player4.push(cards[i]);
-            }
-            // 开始新回合
-            newround();
-            displayCards();
-            document.getElementById('playerpush').textContent = `玩家${nowplayer}`;
-            document.getElementById('cardpushBtn').disabled = false;
-            document.getElementById('doubtBtn').disabled = true;
-            updateButtonStatus()
-        }
-        
-        function newround() {
-            // 随机选择一种牌型作为当前要求
-            var n = Math.floor(Math.random() * 3);
-            nowcard = allcard[n];
-            document.getElementById('cardpush').textContent = nowcard;
-        }
-        function displayCards() {
-            // 清空现有内容
-            document.querySelectorAll('.player').forEach(el => el.innerHTML = '');
-            document.querySelectorAll('.desk').forEach(el => el.innerHTML = '');
-            console.log(lunci)
-            lunci++
-            console.log(`lunci:${lunci}`)
-            console.log(`players${players}`)
-            console.log(`playerhp${playerHP}`)
-            if(lunci === players.length+1){nowplayer=players[0];lunci=1} else{nowplayer=players[lunci-1]}
-            document.getElementById('playerpush').textContent = `玩家${nowplayer}`; 
-            // 显示每位玩家的牌
-            const deskdiv = document.getElementById("desk");
-            if (buffer.length === 0) {
-                deskdiv.innerHTML = "牌桌: 无牌";}
-                else{
-                    buffer.forEach(card=>{
-                        const cardEl = document.createElement('div');
-                        cardEl.className = `card ${card} mx-1 inline-block`;
-                        cardEl.textContent = '?';
-                        cardEl.dataset.value = card;
-                        deskdiv.appendChild(cardEl);})}
-            [player1, player2, player3, player4].forEach((playerCards, index) => {
-                const playerIndex = index + 1;
-                const playerDiv = document.getElementById(`player${playerIndex}`);
-                playerCards.forEach(card => {
-                    const cardEl = document.createElement('div');
-                    cardEl.className = `card ${card}`;
-                    if(nowplayer-1==index){cardEl.textContent = card;}else{cardEl.textContent = "?"}
-                    cardEl.dataset.value = card;
-                    cardEl.dataset.clicked = "false"; // 初始化点击状态
-                    // 为当前玩家的牌添加点击事件
-                    if (playerIndex === nowplayer) {
-                        cardEl.addEventListener('click', function() {
-                            toggleCardSelection(this);
-                        });
-                        cardEl.setAttribute('tabindex', '0'); // 支持键盘导航
-                    } else {
-                        // 非当前玩家的牌不可点击
-                        cardEl.style.opacity = '0.6';
-                        cardEl.style.cursor = 'not-allowed';
-                    }
-                    playerDiv.appendChild(cardEl);
-                });
-            })
-            
-            // 更新按钮状态
-            updateButtonStatus();
-        }
-        
-        function toggleCardSelection(cardEl) {
-            // 切换卡牌选中状态
-            const isSelected = cardEl.dataset.clicked === "true";
-            if (isSelected) {
-                // 取消选中
-                cardEl.dataset.clicked = "false";
-                cardEl.style.transform = "translateY(0)";
-                cardEl.style.boxShadow = "none";
-                // 从pushing数组中移除
-                const index = pushing.indexOf(cardEl.dataset.value);
-                if (index !== -1) pushing.splice(index, 1);
-            } else {
-                // 选中卡牌
-                cardEl.dataset.clicked = "true";
-                cardEl.style.transform = "translateY(-5px)";
-                cardEl.style.boxShadow = "0 5px 10px rgba(0,0,0,0.2)";
-                // 添加到pushing数组
-                pushing.push(cardEl.dataset.value);
-            }
-            
-            // 更新按钮状态
-            updateButtonStatus();
-        }
-        
-        function updateButtonStatus() {
-            // 更新出牌按钮状态
-            const cardpushBtn = document.getElementById('cardpushBtn');
-            cardpushBtn.disabled = pushing.length === 0 || pushing.length>3;
-            // 更新质疑按钮状态
-            const doubtBtn = document.getElementById('doubtBtn');
-            doubtBtn.disabled = document.getElementById('desk').textContent === "牌桌: 无牌";
-        }
-        var gameState = {
-        canPlay: true,      // 是否可以出牌
-        canDoubt: true,    // 是否可以质疑
-        };
-        function cardpush() {
-            // 获取当前玩家的牌组
-            const currentPlayerCards = getCurrentPlayerCards();
-            // 从玩家手中移除选中的牌
-            pushing.forEach(card => {
-                const index = currentPlayerCards.indexOf(card);
-                if (index !== -1) currentPlayerCards.splice(index, 1);
-            });
-            // 更新牌桌显示
-            console.log(pushing)
-            buffer = [...pushing]
-            pushing.length=0
-            // 如果玩家出完了所有牌，获胜
-            if (players.length===1) {
-                alert(`玩家${nowplayer}获胜!`);
-                Dealcards();
-                return;
-            }
-            // 开始新回合
-            // 更新显示
-            players.forEach((v,k) => {
-                    if(nowplayer===v){lastPlayer=players[k]}
-                });
-            displayCards();
-            document.getElementById('doubtBtn').disabled = false;
-        }
-        
-        function doubt() {
-    // 获取上一位玩家的牌
-    const lastPlayerCards = getPlayerCards(lastPlayer);
-    // 检查上一位玩家是否有作弊（出牌中包含非要求的牌型且不是joker）
-    const allCorrect = buffer.every(card => card === nowcard || card === "joker");
-    
-    // 显示桌面卡牌原值
-    const deskCards = document.querySelectorAll('.desk .card');
-    deskCards.forEach(cardEl => {
-        cardEl.textContent = cardEl.dataset.value; // 显示卡牌真实值
-    });
-
-    if (!allCorrect) {
-        console.log(buffer)
-        console.log(`lastplayer:${lastPlayer}`)
-        // 质疑成功，上一位玩家减生命值
-        playerHP[lastPlayer - 1]--;
-        alert(`质疑成功！玩家${lastPlayer}失去1点生命值！${buffer.join('、')}为虚假牌`);
-    } else {
-        console.log(buffer)
-        // 质疑失败，当前质疑玩家减生命值
-        playerHP[nowplayer - 1]--;
-        alert(`质疑失败！玩家${nowplayer}失去1点生命值！所有牌均为${nowcard}`);
-    }
-    
-    // 检查是否有玩家生命值为0
-    if (playerHP[nowplayer-1]===0 || playerHP[lastPlayer-1]===0) {
-        let loser=0
-        if(playerHP[nowplayer-1]===0){loser=nowplayer}else{loser=lastPlayer}
-        players.forEach((v,k) => {
-            if(loser===v){players.splice(k,1)}
-        });
-        if(lunci!==0){lunci--}
-        if(lunci>=players.length && playerHP[nowplayer-1]===0){lunci=0}
-    }
-    
-    players.forEach((v,k) => {
-        if(nowplayer===v){lastPlayer=players[k]}
-    });
-    
-    // 重置牌桌显示（保留翻牌状态直到下一回合）
-    // document.getElementById('desk').textContent = "牌桌: 无牌"; // 注释掉原重置文本的逻辑
-    pushing.length = 0;
-    lunci--
-    if(lunci<0){lunci=0}
-    // 开始新回合（修改：延迟1秒再刷新，让玩家看清牌面）
-    setTimeout(() => {
-        newround();
-        Dealcards();
-        document.getElementById('doubtBtn').disabled = true;
-        
-        // 新回合开始前隐藏桌面卡牌（恢复为问号）
-        const newDeskCards = document.querySelectorAll('.desk .card');
-        newDeskCards.forEach(cardEl => {
-            cardEl.textContent = '?'; // 下一回合隐藏卡牌
-        });
-    }, 1000); // 延迟1秒执行
-    
-    if (players.length===1) {
-    nowplayer=players[0]
-        alert(`玩家${nowplayer}获胜!`);
-        return;
-    }
-}
-        
-        function getCurrentPlayerCards() {
-            switch(nowplayer) {
-                case 1: return player1;
-                case 2: return player2;
-                case 3: return player3;
-                case 4: return player4;
-                default: return [];
-            }
-        }
-        
-        function getPlayerCards(playerIndex) {
-            switch(playerIndex) {
-                case 1: return player1;
-                case 2: return player2;
-                case 3: return player3;
-                case 4: return player4;
-                default: return [];
-            }
-        }
-        
-        function updateHPDisplay() {
-            for (let i = 1; i <= 4; i++) {
-                document.getElementById(`hp${i}`).textContent = playerHP[i - 1];
-            }
-        }
-        // 初始化页面
-        Dealcards();
-    </script>
+    <!-- 引入Socket.IO和游戏模块 -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/GameState.js"></script>
+    <script src="js/CardManager.js"></script>
+    <script src="js/game.js"></script>
 </body>
 </html>
