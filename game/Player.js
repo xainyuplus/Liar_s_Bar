@@ -9,7 +9,7 @@ class Player {
     this.isAlive = true;          // 玩家是否还在游戏中
     this.connected = true;        // 是否连接中
     this.lastAction = Date.now(); // 最后操作时间
-    this.isRobot =isRobot;         // 是否为机器人
+    this.isRobot =false;         // 是否为机器人
   }
 
   addCard(card) {

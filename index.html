@@ -7,48 +7,552 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Document</title>
+   
+   <link rel="stylesheet" href="./CSS/lobby.css">
+   <link rel="stylesheet" href="./CSS/game.css">
    <link rel="stylesheet" href="./CSS/main.css">
+   <!-- 这几个CSS其实是有冲突的，要想办法消除一下，现在算了-->
 </head>
-<script src="./JS/main.js"></script>
-<script src="./JS/utils/animationUtils.js"></script>
+<!-- 加载所有JavaScript模块 -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<!--socket模块-->
+<script src="js/socket-client.js"></script>
+
+<!-- 数据模块 -->
+<script src="js/game/GameState.js"></script>
+<!-- UI组件 -->
+<script src="js/ui/screens/ScreenManner.js"></script>
+<!-- 工具模块 -->
+<script src="js/utils/animationUtils.js"></script>
+<!-- 主控制器 -->
+<script src="js/main.js"></script>
 <!-- 引入 SweetAlert2 库 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <body>
-   <h1>欢迎来到游戏大厅</h1>
-   <h2>点击下方按钮创建房间</h2>
-   <button id="createBtn">创建房间</button>
-   <h2>点击下方按钮加入房间</h2>
-   <button onclick="joinRoom()">加入房间</button>
-</body>
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
+   <div id="lobby-screen" style="z-index: 1;" class="screen hidden" >
+      <div class="bg-decoration"></div>
+
+      <div class="container">
+         <!-- 顶部栏 -->
+         <header class="header">
+            <div class="user-info">
+               <div class="user-avatar">😁</div>
+               <div class="user-details">
+                  <h3>玩家</h3>
+                  <p>等级 15 | 金币 2,580</p>
+               </div>
+            </div>
+            <button class="settings-btn" onclick="showSettings()">⚙️</button>
+         </header>
+
+         <!-- 主要内容区域 -->
+         <main class="main-content">
+            <!-- 角色展示区 -->
+            <section class="character-display">
+               <div class="character-container">
+                  <div class="character-avatar">
+                     <div class="character-accessory">🎩</div>
+                     <div class="character-head">😁</div>
+                     <div class="character-clothes">👗</div>
+                     <div class="character-item-left">💰</div>
+                     <div class="character-item-right">🗝️</div>
+                  </div>
+                  <h2 class="character-name">神秘旅者</h2>
+                  <p class="character-title">酒馆常客 · 真相探索者</p>
+                  <button class="customize-btn" onclick="customizeCharacter()">
+                     🎭 换装打扮
+                  </button>
+               </div>
+            </section>
+
+            <!-- 功能按钮区 -->
+            <section class="function-area">
+               <div class="main-actions">
+                  <button class="primary-btn" id="createBtn" onclick="createRoom()">
+                     🏠 创建房间
+                  </button>
+
+                  <div class="join-room-container">
+                     <input type="text" class="room-input" placeholder="输入房间号" id="roomId">
+                     <button class="secondary-btn" onclick="joinRoom()">🚪 加入</button>
+                  </div>
+
+                  <button class="secondary-btn" onclick="quickMatch()">
+                     🎲 快速匹配
+                  </button>
+               </div>
+
+               <!-- 辅助功能区 -->
+               <div class="secondary-features">
+                  <div class="feature-card" onclick="openShop()">
+                     <span class="feature-icon">🛍️</span>
+                     <div class="feature-title">商店</div>
+                     <div class="feature-desc">装扮道具</div>
+                  </div>
+
+                  <div class="feature-card" onclick="openActivity()">
+                     <span class="feature-icon">🎉</span>
+                     <div class="feature-title">活动</div>
+                     <div class="feature-desc">每日任务</div>
+                  </div>
+
+                  <div class="feature-card" onclick="openRanking()">
+                     <span class="feature-icon">🏆</span>
+                     <div class="feature-title">排行榜</div>
+                     <div class="feature-desc">高手如云</div>
+                  </div>
+               </div>
+            </section>
+         </main>
+      </div>
+
+      <!-- 好友侧栏 -->
+      <div class="friends-sidebar" id="friendsSidebar">
+         <button class="friends-toggle" onclick="toggleFriends()">👥</button>
+         <div class="friends-header">好友列表</div>
+         <div class="friends-list">
+            <div class="friend-item">
+               <div class="friend-avatar">😊🎩</div>
+               <div class="friend-info">
+                  <h4>智慧法师</h4>
+                  <p>正在游戏中</p>
+               </div>
+               <div class="online-status"></div>
+            </div>
+
+            <div class="friend-item">
+               <div class="friend-avatar">🤔💼</div>
+               <div class="friend-info">
+                  <h4>商人老板</h4>
+                  <p>5分钟前在线</p>
+               </div>
+               <div class="online-status offline-status"></div>
+            </div>
+
+            <div class="friend-item">
+               <div class="friend-avatar">😏🗝️</div>
+               <div class="friend-info">
+                  <h4>神秘盗贼</h4>
+                  <p>正在大厅</p>
+               </div>
+               <div class="online-status"></div>
+            </div>
+
+            <div class="friend-item">
+               <div class="friend-avatar">😎🎭</div>
+               <div class="friend-info">
+                  <h4>表演艺术家</h4>
+                  <p>离线</p>
+               </div>
+               <div class="online-status offline-status"></div>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <div id="room-wating" style="z-index: 2;" >
+      <div id="playersDiv" style="display: none; flex-direction: column; align-items: center; position: relative;">
+         <button id="closeButton"
+            style="position: absolute; top: 10px; right: 10px; font-size: 24px; border: none; cursor: pointer;">×</button><span
+            id="roomIDspan"></span>
+         <div id="avatarsContainer" style="display: flex; justify-content: space-around; width: 100%;">
+            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
+            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
+            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
+            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
+         </div>
+         <div id="namesContainer" style="display: flex; justify-content: space-around; width: 100%;"><span
+               style="margin: 10px;">玩家1</span><span style="margin: 10px;">玩家2</span><span
+               style="margin: 10px;">玩家3</span><span style="margin: 10px;">玩家4</span></div><button
+            id="startButton">开始游戏</button>
+      </div>
+   </div>
+
+   <div id="loading-overlay" style="z-index: 3;">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loading-text">加载中</div>
+      <div class="loading-dots"></div>
+   </div>
+   <div id="game-screen"  style=" z-index: 1;" class="screen hidden" >
+      <div class="game-container">
+         <!-- 倒计时器 -->
+         <div class="timer-area">
+            <!-- 倒计时显示区域，初始值为 30 -->
+            <div class="timer" id="timer">30</div>
+         </div>
+
+         <!-- 目标牌区域 -->
+         <div class="target-area">
+            <!-- 目标牌标签 -->
+            <div class="target-label">目标牌</div>
+            <!-- 目标牌显示区域，初始值为 ♠K -->
+            <div class="target-card" id="targetCard"></div>
+            <!-- 回合信息，初始为第 1 轮 -->
+            <div class="round-info">第 1 轮</div>
+         </div>
+
+         <!-- 游戏主区域 -->
+         <div class="game-main">
+            <!-- 第一个对手 -->
+            <div class="opponent" id="opponent1">
+               <!-- 对手角色 -->
+               <div class="opponent-character">
+                  <!-- 对手角色配饰 -->
+                  <div class="character-accessory">🎩</div>
+                  <!-- 对手角色头部 -->
+                  <div class="character-head">😊</div>
+                  <!-- 对手角色衣服 -->
+                  <div class="character-clothes">👔</div>
+                  <!-- 对手角色左侧物品 -->
+                  <div class="character-item-left">💰</div>
+                  <!-- 对手角色右侧物品 -->
+                  <div class="character-item-right">🔍</div>
+               </div>
+               <!-- 对手信息 -->
+               <div class="opponent-info">
+                  <!-- 对手名称 -->
+                  <div class="opponent-name">智慧法师</div>
+                  <!-- 对手牌数量 -->
+                  <div class="opponent-cards">5 张牌</div>
+               </div>
+               <!-- 对手子弹计数器 -->
+               <div class="bullet-counter">
+                  <!-- 枪图标 -->
+                  <span>🔫</span>
+                  <!-- 子弹显示区域 -->
+                  <div class="bullet-display">
+                     <!-- 6 颗未使用的子弹 -->
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                  </div>
+               </div>
+            </div>
+            <!-- 第二个对手 -->
+            <div class="opponent" id="opponent2">
+               <!-- 对手角色 -->
+               <div class="opponent-character">
+                  <!-- 对手角色配饰 -->
+                  <div class="character-accessory">💼</div>
+                  <!-- 对手角色头部 -->
+                  <div class="character-head">🤔</div>
+                  <!-- 对手角色衣服 -->
+                  <div class="character-clothes">🦺</div>
+                  <!-- 对手角色左侧物品 -->
+                  <div class="character-item-left">📊</div>
+                  <!-- 对手角色右侧物品 -->
+                  <div class="character-item-right">💎</div>
+               </div>
+               <!-- 对手信息 -->
+               <div class="opponent-info">
+                  <!-- 对手名称 -->
+                  <div class="opponent-name">商人老板</div>
+                  <!-- 对手牌数量 -->
+                  <div class="opponent-cards">4 张牌</div>
+               </div>
+               <!-- 对手子弹计数器 -->
+               <div class="bullet-counter">
+                  <!-- 枪图标 -->
+                  <span>🔫</span>
+                  <!-- 子弹显示区域 -->
+                  <div class="bullet-display">
+                     <!-- 3 颗未使用的子弹和 3 颗已使用的子弹 -->
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet used"></div>
+                     <div class="bullet used"></div>
+                     <div class="bullet used"></div>
+                  </div>
+               </div>
+            </div>
+            <!-- 第三个对手，处于激活状态 -->
+            <div class="opponent active" id="opponent3">
+               <!-- 对手角色 -->
+               <div class="opponent-character">
+                  <!-- 对手角色配饰 -->
+                  <div class="character-accessory">🎭</div>
+                  <!-- 对手角色头部 -->
+                  <div class="character-head">😏</div>
+                  <!-- 对手角色衣服 -->
+                  <div class="character-clothes">👘</div>
+                  <!-- 对手角色左侧物品 -->
+                  <div class="character-item-left">🗝️</div>
+                  <!-- 对手角色右侧物品 -->
+                  <div class="character-item-right">⚔️</div>
+               </div>
+               <!-- 对手信息 -->
+               <div class="opponent-info">
+                  <!-- 对手名称 -->
+                  <div class="opponent-name">神秘盗贼</div>
+                  <!-- 对手牌数量 -->
+                  <div class="opponent-cards">5 张牌</div>
+               </div>
+               <!-- 对手子弹计数器 -->
+               <div class="bullet-counter">
+                  <!-- 枪图标 -->
+                  <span>🔫</span>
+                  <!-- 子弹显示区域 -->
+                  <div class="bullet-display">
+                     <!-- 6 颗未使用的子弹 -->
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                     <div class="bullet"></div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- 中央牌桌 -->
+            <div class="table-area">
+
+               <div class="table-center">
+                  <!-- 已出牌区域 -->
+                  <div class="played-cards-area" id="playedCards"></div>
+
+                  <!-- 出牌信息 -->
+                  <div class="played-info" id="playedInfo">qq</div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- 手牌区域 -->
+      <div class="hand-area">
+         <!-- 手牌显示区域 -->
+         <div class="hand-cards" id="handCards">
+
+         </div>
+
+         <!-- 行动按钮区域 -->
+         <div class="action-area">
+            <!-- 质疑按钮，点击触发质疑函数 -->
+            <button class="action-btn" id="challengeBtn" onclick="challenge()">
+               🔫 质疑
+            </button>
+            <!-- 选择信息显示区域 -->
+            <div class="selection-info" id="selectionInfo">
+               请选择 1-3 张牌
+            </div>
+            <!-- 出牌按钮，初始禁用，点击触发出牌函数 -->
+            <button class="action-btn" id="playBtn" onclick="playSelectedCards()">
+               🃏 出牌
+            </button>
+         </div>
+      </div>
+
+      <!-- 聊天与表情面板 -->
+      <div class="chat-panel" id="chatPanel">
+         <div class="chat-header">
+            <span>💬 聊天 & 表情</span>
+            <button class="chat-toggle" id="chatToggle" onclick="toggleChat()">−</button>
+         </div>
+         <div class="chat-content" id="chatContent">
+            <div class="chat-messages" id="chatMessages">
+               <div class="chat-message system">游戏开始！目标牌是 K</div>
+               <div class="chat-message player">智慧法师: 😊 大家好运！</div>
+               <div class="chat-message player">商人老板: 🤔 让我想想...</div>
+            </div>
+
+            <div class="toggle-buttons">
+               <button class="toggle" id="toggle-emoji-btn" onclick="toggleEmojiPanel()">
+                  😀 显示表情
+               </button>
+               <button class="toggle" id="toggle-quick-btn" onclick="toggleQuickPanel()">
+                  💬 显示短语
+               </button>
+               <button class="toggle" id="send-btn" onclick="sendMessage()">发送</button>
+               <div class="message-input-container">
+                  <input type="text" id="messageInput" class="message-input" placeholder="输入消息...">
+               </div>
+            </div>
+
+            <div class="expression-area" id="expressionArea">
+               <div class="expression-label">快速表情</div>
+               <div class="expression-grid">
+                  <button class="expression-btn" onclick="insertIntoInput('😊')">😊</button>
+                  <button class="expression-btn" onclick="insertIntoInput('😏')">😏</button>
+                  <button class="expression-btn" onclick="insertIntoInput('🤔')">🤔</button>
+                  <button class="expression-btn" onclick="insertIntoInput('😎')">😎</button>
+                  <button class="expression-btn" onclick="insertIntoInput('😰')">😰</button>
+                  <button class="expression-btn" onclick="insertIntoInput('🙄')">🙄</button>
+                  <button class="expression-btn" onclick="insertIntoInput('😤')">😤</button>
+                  <button class="expression-btn" onclick="insertIntoInput('🤨')">🤨</button>
+                  <button class="expression-btn" onclick="insertIntoInput('😮')">😮</button>
+                  <button class="expression-btn" onclick="insertIntoInput('🤗')">🤗</button>
+                  <button class="expression-btn" onclick="insertIntoInput('🤫')">🤫</button>
+                  <button class="expression-btn" onclick="insertIntoInput('😈')">😈</button>
+               </div>
+            </div>
+
+            <div class="expression-area" id="quickPanel">
+               <div class="expression-label">快捷短语</div>
+               <div class="quick-messages">
+                  <button class="quick-msg-btn" onclick="insertIntoInput('我觉得你在撒谎！')">🔍 我觉得你在撒谎！</button>
+                  <button class="quick-msg-btn" onclick="insertIntoInput('相信我，这是真的')">🤝 相信我，这是真的</button>
+                  <button class="quick-msg-btn" onclick="insertIntoInput('让我想想...')">🤔 让我想想...</button>
+                  <button class="quick-msg-btn" onclick="insertIntoInput('好险！')">😅 好险！</button>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- 游戏状态提示 ,这玩意以后肯定要删掉，先保留看一下-->
+      <div class="game-status" id="gameStatus">
+         <!-- 质疑结果标题 -->
+         <h3>质疑结果</h3>
+         <!-- 质疑结果信息 -->
+         <p>质疑成功！对方撒谎了</p>
+         <!-- 继续游戏按钮，点击触发隐藏状态函数 -->
+         <button class="action-btn" onclick="hideStatus()">继续游戏</button>
+      </div>
+
+   </div>
+</body>
 <script>
+   //这里放那个加载页面的函数
+   //首先是一个专场动画控制类
+   class LoadingTransition {
+      constructor() {
+         this.overlay = document.getElementById('loading-overlay');
+         this.textElement = document.getElementById('loading-text');
+
+         this.isShowing = false;
+      }
+
+      // 开始转场动画
+      show(text) {
+         this.textElement.textContent = text;
+         this.overlay.classList.add('show');
+         this.isShowing = true;
+
+         return new Promise(resolve => {
+            // 等待动画完成后返回
+            setTimeout(resolve, 300);
+         });
+      }
+
+      // 结束转场动画
+      hide() {
+         this.overlay.classList.remove('show');
+         this.isShowing = false;
+
+         return new Promise(resolve => {
+            // 等待动画完成后返回
+            setTimeout(resolve, 300);
+         });
+      }
+
+      // 更新加载文字
+      updateText(text) {
+         this.textElement.textContent = text;
+      }
+
+      // 检查是否正在显示
+      isVisible() {
+         return this.isShowing;
+      }
+   }
+
+   // 创建全局转场动画实例
+   const loadingTransition = new LoadingTransition();
+   console.log(loadingTransition);
+
+   // 带转场动画的页面切换函数（这里有同步方法，非常好）
+   async function showScreenWithLoading(screenName, loadingText) {
+      // 1. 显示加载动画
+      await loadingTransition.show(loadingText || '切换页面中');
+
+      // 2. 模拟一些处理时间（实际项目中可能是数据加载）
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 3. 执行页面切换
+      switchScreen(screenName);
+
+      // 4. 隐藏加载动画
+      await loadingTransition.hide();
+   }
+
+   // 实际的页面切换逻辑
+   function switchScreen(screenName) {
+      console.log('切换到页面:', screenName);
+
+      // 隐藏所有页面
+      document.querySelectorAll('.screen').forEach(screen => {
+         screen.classList.add('hidden');
+      });
+
+      // 显示目标页面
+      const targetScreen = document.getElementById(screenName + '-screen');
+      if (targetScreen) {
+         targetScreen.classList.remove('hidden');
+      }
+   }
+</script>
+<script>
+   //这里是界面初始化
+   window.onload = function () {
+      showScreenWithLoading("lobby","加载游戏大厅中")
+      
+   }
+   
+
+</script>
+<script>
+   //一会考虑写一个从服务器端随机获得名字与ID与头像的函数
+
+
+
    // 点击按钮创建房间
    //创建房间的方式是，向后端发送一个请求，仅包括房主id
    //测试阶段，房主id固定为2233，后期会由数据库记录
    //后端将返回房间id，此时前端生成一个类似弹窗的页面，显示id和已经加入房间的人，还有x号
    //点击x号会有提示，之后退出房间，向后端发信息，之后房间销毁
    //人数达到4个后点击确定可以开始游戏，也可以点击人机模式，之后进入游戏页面
+   roomInfo = {
+      roomId: "房间id",
+      playerList: [
+      ],
+      updateList: function (playerList) {
+         this.playerList = playerList;
+         //更新玩家列表
+         Array.from(document.getElementById('playersDiv').querySelectorAll('#avatarsContainer img')).forEach((img, index) => {
+            if (index < playerList.length) {
+               img.src = `./assets/images/avatars/${playerList[index].avatar}`; // 更新头像
+               img.alt = playerList[index].name; // 更新名字 
+            }
+            else {
+               img.src = `./assets/images/avatars/avatar0.png`; // 更新头像
+               img.alt = ""; // 更新名字 
+            }
+         })
+      }
+   }
 
-   const socket = io("http://localhost:3000");
    const thisplayerInfo = {
       id: "玩家id",
       name: "玩家名字",
       avatar: "avatar1.png",
       isHost: true
    };
-   function createRoom(hostId) {
-      socket.emit('create_room', hostId); // 发送创建房间请求
+
+   function createRoom() {
+      socket.emit('create_room', thisplayerInfo.id); // 发送创建房间请求
    }
 
-   document.getElementById("createBtn").addEventListener("click", () => {
-      createRoom(2233);
-   });
+
 
    function joinRoom() {
-      // 弹出一个输入框，让用户输入房间ID
-      const roomId = prompt("请输入房间ID:");
+      // 获取房间ID
+      const roomId = document.querySelector('.room-input').value;
+      console.log(roomId);
       if (roomId) {
          // 发送加入房间请求
          socket.emit('join_room', {
@@ -59,8 +563,9 @@
       }
 
    }
+
    function startGame() {
-      if(thisplayerInfo.isHost){
+      if (thisplayerInfo.isHost) {
          Swal.fire({
             title: '准备好了吗？',
             text: "人数不足四人时，将以机器人代替空缺玩家",
@@ -73,31 +578,55 @@
 
          }).then((result) => {
             if (result.isConfirmed) {
-               // 跳转到游戏页面
-               
+               if (roomInfo.playerList.length < 4) {
+                  //如果人数不足4人，将自动添加机器人
+                  for (let i = roomInfo.playerList.length; i < 4; i++) {
+                     robotInfo = {
+                        id: "机器人id",
+                        name: `机器人${i + 1}号`,
+                        avatar: "robot.png",
+                        isHost: false,
+                        isRobot: true
+                     }
+                     socket.emit('join_room', {
+                        roomId: roomInfo.roomId,
+                        playerInfo: robotInfo
+                     });
 
-               window.location.href = 'game.html'; // 替换为你的游戏页面路径
+                  }
+
+               }
+             document.getElementById('playersDiv').remove();
+               //加载游戏页面
+               showScreenWithLoading('game', '加载游戏页面中');
+
+               socket.emit('start_game', { roomId: roomInfo.roomId }); // 发送开始游戏请求
+
+            
+
+
+
             }
-            else{
+            else {
                Swal.fire({
                   title: '已取消',
                   icon: 'error',
                   confirmButtonColor: '#3085d6',
                   confirmButtonText: '确定'
                });
-            } 
+            }
          })
-         
+
 
 
       }
-      else{
+      else {
          Swal.fire({
             title: '你不是房主，无法开始游戏',
             icon: 'error',
             confirmButtonColor: '#3085d6',
             confirmButtonText: '确定'
-         }); 
+         });
       }
    }
    function closeDiv() {
@@ -114,11 +643,11 @@
             cancelButtonText: '取消'
          }).then((result) => {
             if (result.isConfirmed) {
-                  //删除房间
+               //删除房间
                document.getElementById('playersDiv').remove();
                localStorage.removeItem('roomId'); // 从本地存储中移除房间ID
-              // socket.emit('close_room', { roomId: localStorage.getItem('roomId') }); // 发送关闭房间请求
-              //这一部分后端还没写
+               // socket.emit('close_room', { roomId: localStorage.getItem('roomId') }); // 发送关闭房间请求
+               //这一部分后端还没写
             }
          });
 
@@ -134,25 +663,19 @@
             cancelButtonText: '取消'
          }).then((result) => {
             if (result.isConfirmed) {
-                document.getElementById('playersDiv').remove();
+               document.getElementById('playersDiv').remove();
 
             }
          });
 
       }
    }
-</script>
-<script>
-   socket.on('room_created', (roomId) => {
-      console.log(`Room created with ID: ${roomId}`); // 接收创建成功的消息 
-      localStorage.setItem('roomId', roomId); //把房间ID保存到本地存储中
-      socket.emit('join_room', {
-         roomId,
-         playerInfo: thisplayerInfo
-      }); // 发送加入房间请求
-      console.log("发送了加入房间请求");
-
-      const players_Div = playersDiv(roomId);
+   //创建房间/加入房间成功后或加入游戏成功后展示一个房间加入页面（div）(本来存在但隐藏)
+   //隐藏的好处是，不用担心dom创建过程时导致异步操作
+   function intiDiv(roomId) {
+      const players_Div = document.getElementById('playersDiv');
+      players_Div.style.display = 'flex';
+      players_Div.querySelector('#roomIDspan').innerHTML = `房间ID: ${roomId}`;
       //在这里添加一下监听器，一个是关闭，一个是开始游戏
       players_Div.querySelector('#closeButton').addEventListener('click', () => {
          console.log("关闭按钮被点击");
@@ -166,40 +689,749 @@
       if (!thisplayerInfo.isHost) {
          players_Div.querySelector('#startButton').style.display = 'none';
       }
-
-
-
-
-      document.body.appendChild(players_Div);
+   }
+   // 好友列表切换
+   function toggleFriends() {
+      const sidebar = document.getElementById('friendsSidebar');
+      sidebar.classList.toggle('open');
+   }
+</script>
+<script>
+   socket.on('room_created', (roomId) => {
+      console.log(`Room created with ID: ${roomId}`); // 接收创建成功的消息 
+      localStorage.setItem('roomId', roomId); //把房间ID保存到本地存储中
+      socket.emit('join_room', {
+         roomId,
+         playerInfo: thisplayerInfo
+      }); // 发送加入房间请求
+      console.log("发送了加入房间请求");
    })
-   //房间创建成功后或加入游戏成功后展示一个房间加入页面（div），类似，显示房间号，然后是四个人的头像（未加入的位置显示为空白），下方是两个按钮：准备 和人机对局
-   //点击人机对局后
 
-   //接收广播的玩家加入事件，用于同步更新玩家加入界面
-   socket.on('player_joined', (playerInfo) => {
+   socket.on('room_joined', (roomId) => {
+      console.log(`Joined room with ID: ${roomId}`); // 接收加入成功的消息
+      localStorage.setItem('roomId', roomId); //把房间ID保存到本地存储中
+      roomInfo.roomId = roomId; //更新房间ID
+      intiDiv(roomId); //初始化房间加入页面
+
+   })
+
+   //接收广播的玩家加入事件，用于同步更新玩家加入界面，我认为这里应该直接发过来玩家列表数组
+   socket.on('player_joined', (data) => {
+      console.log(data);
+      const playerlist = data.playerList; //获取玩家列表
+      const playerInfo = data.playerInfo; //获取玩家信息
       console.log(`Player joined: ${playerInfo.name}`); // 接收玩家加入的消息
-      //显示玩家加入的弹窗
-      Swal.fire({
-         position: 'center',
-         icon: 'info',
-         title: `${playerInfo.name} 加入了房间`,
-         showConfirmButton: false,
-         timer: 1500
-      });
-      //更新玩家加入界面
+      if (playerInfo.isRobot) {
 
-      Array.from(document.getElementById('playersDiv').querySelectorAll('#avatarsContainer img')).some((player_avatar, index) => {
-         if (player_avatar.getAttribute('data-avatar') == "false") {
-            player_avatar.src = `./assets/images/avatars/${playerInfo.avatar}`;
-            player_avatar.setAttribute('data-avatar', "true");
-            return true;
-         }
+      }
+      else {
+         //显示玩家加入的弹窗
+         Swal.fire({
+            position: 'center',
+            icon: 'info',
+            title: `${playerInfo.name} 加入了房间`,
+            showConfirmButton: false,
+            timer: 1500
+         });
+      }
 
-      });
+      console.log(playerlist);
+      roomInfo.updateList(playerlist); //更新玩家列表
    })
 
+   socket.on('error', (errorInfo) => {
+      Swal.fire({
+         title: errorInfo,
+         icon: 'warning',
+         confirmButtonColor: '#3085d6',
+         confirmButtonText: '确认',
+      })
+   })
+
+//接下来首先把game界面自身的一些测试函数给去掉
+//然后呢，我们就去写发牌，取牌，出牌等等的前后端逻辑，确保能玩
+//至于页面上需要调整的，到时候再说吧
+//然后呢，适当把代码拆分一下？
+//首先呢，我们把要拆除的函数给提出来吧
+</script>
+<script>
+   //以下是游戏界面的初始化和动画的代码，我认为肯定存在大量冗余，以后改
+   //而且有些函数的逻辑本该属于后端，再说吧
+    toggleChat();
+    document.getElementById('playedCards').style.visibility = 'hidden';
+    const allcard = ["A", "Q", "K"];
+    const play1 = ["A", "Q", "K", "joker", "joker"];
+    let selectedCards = [];
+    let timerInterval;
+    let currentTime = 30;
+    // 初始化完整牌堆并洗牌
+    function initDeck() {
+        // 创建完整牌组（4个玩家，每人5张，共20张）
+        const fullDeck = [];
+        const cardTypes = ["A", "Q", "K", "joker"];
+        const counts = [6, 6, 6, 2]; // 每种牌的数量
+
+        for (let i = 0; i < cardTypes.length; i++) {
+            for (let j = 0; j < counts[i]; j++) {
+                fullDeck.push(cardTypes[i]);
+            }
+        }
+
+        // 洗牌算法（Fisher-Yates）
+        for (let i = fullDeck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]];
+        }
+
+        return fullDeck;
+    }
+
+    const deck = initDeck();
+    // 图片对象
+    const cardImages = {
+        'A': new Image(),
+        'Q': new Image(),
+        'K': new Image(),
+        'joker': new Image(),
+        'back': new Image()
+    };
+    const cardImagePaths = {
+        'A': './assets/images/cards/A.png',
+        'Q': './assets/images/cards/Q.png',
+        'K': './assets/images/cards/K.png',
+        'joker': './assets/images/cards/joker.png',
+        'back': './assets/images/cards/card_back.png'
+    };
+    // 跟踪已加载的图片数量
+    let loadedImages = 0;
+    const totalImages = Object.keys(cardImages).length;
+
+    // 加载所有图片并在全部完成后初始化游戏
+    function loadImages() {
+        for (const [key, image] of Object.entries(cardImages)) {
+            image.onload = () => {
+                loadedImages++;
+                console.log(`${key} 图片加载完成`);
+                if (loadedImages === totalImages) {
+                    console.log('所有图片加载完成，初始化游戏');
+                    //是先画目标牌吗？然后渲染手牌，然后是在渲染手牌中加了一句显示目标牌的？
+                    //目标牌的渲染有些重复了，所以第二个我会改一下就是newround函数
+                    //同时上来就直接发牌不行，我会把这一步放在其他地方的
+                    drawtargetCard();
+                    setTimeout(() => { if (dealCards()) setTimeout(drawCard, 1300) }, 500);
+                }
+                else {
+                    console.log(`还有 ${totalImages - loadedImages} 张图片未加载`);
+                }
+            };
+            image.onerror = (error) => {
+                console.error(`加载图片 ${key} 失败:`, error);
+            };
+            image.src = cardImagePaths[key];
+        }
+    }
+    //目标牌绘制（背景）
+    function drawtargetCard() {
+        const targetArea = document.getElementById('targetCard');
+
+        // 清空现有内容
+        targetArea.innerHTML = '';
+
+        // 创建Canvas元素
+        const targetcanvas = document.createElement('canvas');
+        targetcanvas.width = 50;
+        targetcanvas.height = 75;
+        targetArea.appendChild(targetcanvas);
+        const ctx = targetcanvas.getContext('2d');
+        ctx.drawImage(cardImages['back'], 0, 0, targetcanvas.width, targetcanvas.height);
+
+    }
+    //选出目标牌，与目标牌绘制（背景）有重复逻辑，这里由newround改为set_target()(英文有问题先不管了)
+    //就是现有一个局内信息的记录和更新，再把目标牌类型传递过来，就这样，over
+    function newround() {
+        var n = Math.floor(Math.random() * 3);
+        nowcard = allcard[n];
+        const targetArea = document.getElementById('targetCard');
+
+        // 清空现有内容
+        targetArea.innerHTML = '';
+
+        const targetcanvas = document.createElement('canvas');
+        targetcanvas.width = 50;
+        targetcanvas.height = 75;
+        targetcanvas.className = `card ${nowcard}`;
+        targetArea.appendChild(targetcanvas);
+        const ctx = targetcanvas.getContext('2d');
+        ctx.drawImage(cardImages['back'], 0, 0, targetcanvas.width, targetcanvas.height);
+
+        // 调用翻牌动画
+        //这玩意有用吗？有用，否则显示的就是卡背
+        setTimeout(() => {
+            flipCard(ctx, targetcanvas.width, targetcanvas.height, nowcard);
+        }, 1000);
+        Timer(); 
+    }
+    //翻转牌动画
+    function flipCard(ctx, width, height, nowcard) {
+        cardFlipping = true;
+
+        let angle = 0;
+        const totalFrames = 30; // 动画总帧数
+        const frameDuration = 16; // 每帧持续时间（ms）
+
+        function animate() {
+            angle += Math.PI / totalFrames;
+
+            // 清除画布
+            ctx.clearRect(0, 0, width, height);
+
+            // 保存当前上下文状态
+            ctx.save();
+            // 应用变换
+            ctx.translate(width / 2, height / 2);
+            ctx.scale(Math.abs(Math.cos(angle)), 1);
+            ctx.rotate(angle);
+            ctx.rotate(angle);
+            // 绘制牌
+            if (angle < Math.PI / 2) {
+                // 显示牌背面
+                ctx.drawImage(cardImages['back'], -width / 2, -height / 2, width, height);
+            } else {
+                // 显示牌正面
+                ctx.drawImage(cardImages[nowcard], -width / 2, -height / 2, width, height);
+            }
+
+            // 恢复上下文状态
+            ctx.restore();
+
+            // 继续动画
+            if (angle < Math.PI) {
+                requestAnimationFrame(animate);
+            } else {
+                // 动画完成
+                isCardFlipped = true;
+                cardFlipping = false;
+            }
+        }
+
+        // 开始动画
+        requestAnimationFrame(animate);
+    }
+    //出牌
+
+    // 玩家位置
+    const players = [
+        {
+            id: 'opponent1',
+            hand: [],
+            // 顶部对手：水平居中，垂直 60px（与 CSS 的 top: 60px 一致）
+            position: {
+                x: window.innerWidth / 2,
+                y: 60
+            }
+        },
+        {
+            id: 'opponent2',
+            hand: [],
+            // 左侧对手：水平 28% 宽度处，垂直居中（与 CSS 的 left: 28% 一致）
+            position: {
+                x: window.innerWidth * 0.28,
+                y: window.innerHeight / 2
+            }
+        },
+        {
+            id: 'opponent3',
+            hand: [],
+            // 右侧对手：水平 72% 宽度处（100% - 28%），垂直居中
+            position: {
+                x: window.innerWidth * 0.72,
+                y: window.innerHeight / 2
+            }
+        },
+        {
+            id: 'player1',
+            hand: [],
+            // 玩家自己：水平居中，垂直底部 100px（保持原逻辑）
+            position: {
+                x: window.innerWidth / 2,
+                y: window.innerHeight - 100
+            }
+        }
+    ];
+
+    // 初始化牌堆Canvas（绘制牌背）
+    function initDeckCanvas() {
+        const playCards = document.getElementById('playedCards');
+        playCards.style.visibility = 'visible';
+        const stx = document.createElement('div');
+        stx.className = 'played-card';
+        const canvas = document.createElement('canvas');
+        canvas.width = 40;
+        canvas.height = 56;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(cardImages['back'], 0, 0, canvas.width, canvas.height);
+        playCards.style.visibility = 'visible';
+        stx.appendChild(ctx.canvas);
+        playCards.appendChild(stx);
+
+    }
+    // 发牌动画主函数
+    function dealCards() {
+        initDeckCanvas(); // 初始化牌堆显示
+        players.forEach((player, index) => {
+            // 每个玩家发5张牌
+            for (let i = 0; i < 5; i++) {
+                //const cardValue = deck.pop();
+                //这行不知道为什么，没用，那么初始手牌是如何加载的呢？
+                setTimeout(() => {
+                    // 从牌堆位置平移到目标位置
+                    const startPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 }; // 牌堆中心
+                    const endPos = getPlayerHandPosition(player, i); // 计算手牌位置
+
+                    // 创建临时Canvas绘制单张牌
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 60;
+                    tempCanvas.height = 90;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(cardImages['back'], 0, 0, 60, 90);
+
+                    // 执行平移动画
+                    animateCardTranslation(tempCanvas, startPos, endPos, () => {
+                        tempCanvas.remove();
+                    });
+                }, index * 100 + i * 200); // 延迟控制发牌顺序
+            }
+        });
+        return 1;
+    }
+
+    // 计算手牌位置（横向排列）
+    function getPlayerHandPosition(player, index) {
+        const baseX = player.position.x;
+        const baseY = player.position.y;
+        const offsetX = 0;
+        return { x: baseX + offsetX, y: baseY };
+    }
+
+    // 平移动画函数
+    function animateCardTranslation(canvas, start, end, callback) {
+        const ctx = canvas.getContext('2d');
+        const duration = 300; // 动画时长（ms）
+        const startTimestamp = performance.now();
+
+        function update(timestamp) {
+            let progress = (timestamp - startTimestamp) / duration;
+            if (progress > 1) progress = 1;
+
+            // 线性插值计算当前位置
+            const currentX = start.x + (end.x - start.x) * progress;
+            const currentY = start.y + (end.y - start.y) * progress;
+
+            // 绘制当前帧
+            drawCardAtPosition(canvas, currentX, currentY);
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                callback(); // 动画完成回调
+            }
+        }
+        requestAnimationFrame(update);
+    }
+
+    // 在指定位置绘制卡牌
+    function drawCardAtPosition(canvas, x, y) {
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.zIndex = 999;
+        tempDiv.style.left = `${x}px`;
+        tempDiv.style.top = `${y}px`;
+        tempDiv.appendChild(canvas);
+        document.body.appendChild(tempDiv);
+    }
+
+    //渲染卡牌
+    function drawCard() {
+        const playedCards = document.getElementById('playedCards');
+        playedCards.innerHTML = '';
+        playedCards.style.visibility = 'hidden';
+        const handCards = document.getElementById('handCards');
+        play1.forEach((cardValue, index) => {
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'hand-card';
+            cardContainer.dataset.value = cardValue;
+            cardContainer.dataset.clicked = "false"; // 初始化点击状态
+
+            const frontCanvas = document.createElement('canvas');
+            frontCanvas.width = 70;
+            frontCanvas.height = 100;
+            const frontCtx = frontCanvas.getContext('2d');
+            const cardImage = cardImages[cardValue];
+
+
+            frontCtx.drawImage(cardImage, 0, 0, frontCanvas.width, frontCanvas.height);
+
+
+            cardContainer.appendChild(frontCanvas);
+            handCards.appendChild(cardContainer);
+            cardContainer.addEventListener('click', handleCardClick);
+        })
+        //为什么要放在这里捏，注释掉看看效果
+        newround();
+        //好像没有任何影响，哦还是有的，注释掉后就不能加载目标牌了
+        //那么这个渲染卡牌指的是渲染手牌吗？我再看看，
+    }
+
+
+    // 处理卡牌点击事件
+    function handleCardClick(event) {
+        const card = event.currentTarget;
+        const isSelected = card.classList.contains('selected');
+
+        // 如果已选卡牌达到3张且当前卡牌未选中，则不处理点击
+        if (selectedCards.length >= 3 && !isSelected) {
+            return;
+        }
+
+        // 切换选中状态
+        if (isSelected) {
+            card.classList.remove('selected');
+            card.style.transform = 'translateY(0)';
+            // 从已选列表中移除
+            selectedCards = selectedCards.filter(c => c !== card);
+        } else {
+            card.classList.add('selected');
+            card.style.transform = 'translateY(-15px)';
+            // 添加到已选列表
+            selectedCards.push(card);
+        }
+
+        // 更新自定义属性
+        card.dataset.clicked = isSelected ? "false" : "true";
+
+        // 更新出牌按钮状态
+        updatePlayButtonState();
+    }
+    // 更新出牌按钮状态
+    function updatePlayButtonState() {
+        const playSelectedButton = document.getElementById('playBtn');
+        if (selectedCards.length > 0 && selectedCards.length <= 3) {
+            playSelectedButton.disabled = false;
+            playSelectedButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            playSelectedButton.disabled = true;
+            playSelectedButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+    // 播放卡牌动画
+    function playSelectedCards() {
+        if (selectedCards.length === 0) return;
+        // 获取窗口尺寸
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        const playedCardsArea = document.getElementById('playedCards');
+        // 清除提示文本
+        if (playedCardsArea.querySelector('p')) {
+            playedCardsArea.innerHTML = '';
+        }
+
+        const targetPositions = [];
+        const cardWidth = 70; // 卡牌宽度
+        const gap = 8; // 卡牌间距
+        const totalWidth = selectedCards.length * cardWidth + (selectedCards.length - 1) * gap;
+        const startX = (playedCardsArea.offsetWidth - totalWidth) / 2;
+
+        for (let i = 0; i < selectedCards.length; i++) {
+            targetPositions.push({
+                x: startX + i * (cardWidth + gap),
+                y: playedCardsArea.offsetHeight - 450
+            });
+        }
+
+        // 保存原始卡牌数据并开始动画
+        const originalCards = [...selectedCards];
+        const originalCardValues = originalCards.map(card => card.dataset.value);
+
+        // 开始动画
+        animateCardsToPlayArea(originalCards, targetPositions, () => {
+            // 动画结束后，添加到已打出区域
+            playedCardsArea.innerHTML = '';
+            originalCards.forEach((card, index) => {
+                card.style.transform = 'none';
+                card.classList.remove('selected');
+                playedCardsArea.appendChild(card);
+            });
+
+            // 从手牌中移除已打出的卡牌
+            const handCardsArea = document.getElementById('handCards');
+            originalCards.forEach(card => {
+                if (handCardsArea.contains(card)) {
+                    handCardsArea.removeChild(card);
+                }
+            });
+
+            // 重置已选卡牌
+            selectedCards = [];
+            updatePlayButtonState();
+
+            // 绘制等量的卡牌背面
+            for (let i = 0; i < originalCards.length; i++) {
+                initDeckCanvas();
+            }
+        });
+        Timer();
+    }
+
+    // 卡牌动画函数
+    function animateCardsToPlayArea(cards, targetPositions, callback) {
+        const duration = 800; // 动画持续时间（毫秒）
+        const startTime = performance.now();
+
+        // 获取初始位置
+        const startPositions = cards.map(card => {
+            const rect = card.getBoundingClientRect();
+            const parentRect = document.getElementById('playedCards').getBoundingClientRect();
+            return {
+                x: rect.left - parentRect.left,
+                y: rect.top - parentRect.top
+            };
+        });
+
+        // 确保所有卡牌的初始位置都是正确的
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            card.style.position = 'absolute';
+            card.style.left = `${rect.left}px`;
+            card.style.top = `${rect.top}px`;
+            card.style.zIndex = '10';
+
+            // 确保父容器是相对定位
+            document.getElementById('playedCards').style.position = 'relative';
+            document.body.appendChild(card);
+        });
+
+        // 动画循环
+        function animate(currentTime) {
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+            const easeProgress = easeOutCubic(progress);
+
+            cards.forEach((card, index) => {
+                const startPos = startPositions[index];
+                const targetPos = targetPositions[index];
+
+                // 计算当前位置
+                const currentX = startPos.x + (targetPos.x - startPos.x) * easeProgress;
+                const currentY = startPos.y + (targetPos.y - startPos.y) * easeProgress;
+
+                // 应用变换
+                card.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            });
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // 动画完成
+                callback();
+            }
+        }
+
+        // 开始动画
+        requestAnimationFrame(animate);
+    }
+
+    // 缓动函数
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+    //倒计时
+    function Timer() {
+        const timerElement = document.getElementById('timer');
+        if (!timerElement) return;
+
+        // 清除现有定时器
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+
+        // 重置时间
+        currentTime = 30;
+        timerElement.textContent = currentTime;
+
+        // 创建新定时器
+        timerInterval = setInterval(updateTimer, 1000);
+
+        function updateTimer() {
+            currentTime--;
+            timerElement.textContent = currentTime;
+
+            if (currentTime <= 0) {
+                clearInterval(timerInterval);
+                timerElement.textContent = '时间到！';
+            }
+        }
+    }
+
+    //表情及聊天
+    function toggleChat() {
+        const chatContent = document.getElementById('chatContent');
+        const toggleBtn = document.querySelector('.chat-toggle');
+
+        if (chatContent.style.display === 'none') {
+            chatContent.style.display = 'flex';
+            toggleBtn.textContent = '−';
+        } else {
+            chatContent.style.display = 'none';
+            toggleBtn.textContent = '+';
+        }
+    }
+
+    // 切换表情面板显示/隐藏
+    function toggleEmojiPanel() {
+        const emojiPanel = document.getElementById('expressionArea');
+        const toggleBtn = document.getElementById('toggle-emoji-btn');
+
+        if (emojiPanel.style.display === 'none' || emojiPanel.style.display === '') {
+            emojiPanel.style.display = 'block';
+            toggleBtn.innerHTML = '🙊 隐藏表情';
+            document.getElementById('quickPanel').style.display = 'none';
+            document.getElementById('toggle-quick-btn').innerHTML = '💬 显示短语'; // 修正这里
+        } else {
+            emojiPanel.style.display = 'none';
+            toggleBtn.innerHTML = '😀 显示表情';
+        }
+    }
+
+    // 切换快捷短语面板显示/隐藏
+    function toggleQuickPanel() {
+        const quickPanel = document.getElementById('quickPanel');
+        const toggleBtn = document.getElementById('toggle-quick-btn');
+
+        if (quickPanel.style.display === 'none' || quickPanel.style.display === '') {
+            quickPanel.style.display = 'block';
+            toggleBtn.innerHTML = '🙊 隐藏短语';
+            document.getElementById('expressionArea').style.display = 'none';
+            document.getElementById('toggle-emoji-btn').innerHTML = '😀 显示表情'; // 修正这里
+        } else {
+            quickPanel.style.display = 'none';
+            toggleBtn.innerHTML = '💬 显示短语';
+        }
+    }
+
+    // 插入内容到输入框
+    function insertIntoInput(content) {
+        const input = document.getElementById('messageInput');
+        input.value += content;
+        input.focus();
+    }
+
+    // 发送文本消息
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        if (message) {
+            appendMessage(message);
+            input.value = ''; // 清空输入框
+            document.getElementById('expressionArea').style.display = 'none';
+            document.getElementById('quickPanel').style.display = 'none';
+            document.getElementById('toggle-emoji-btn').innerHTML = '😀 显示表情';
+            document.getElementById('toggle-quick-btn').innerHTML = '💬 显示短语';
+
+        }
+    }
+
+    // 追加消息到聊天窗口
+    function appendMessage(content) {
+        const chatMessages = document.getElementById('chatMessages');
+        const newMessage = document.createElement('div');
+        newMessage.className = 'chat-message player';
+        newMessage.textContent = '你: ' + content;
+        chatMessages.appendChild(newMessage);
+
+        // 滚动到底部
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // 支持按Enter发送消息
+    document.getElementById('messageInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    //翻转牌，并通过判断是否渲染开枪动画
+    function challenge() {
+
+        function checkcard() {
+            const playedCards = document.getElementById('playedCards');
+            const cardElements = playedCards.querySelectorAll('.played-card canvas');
+
+            // 逐个翻转卡牌
+            cardElements.forEach((canvas, index) => {
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+
+                // 延迟执行，使卡牌逐个翻转
+                setTimeout(() => {
+                    // 选择对应的卡牌正面图像;
+                    flipCard(ctx, width, height, 'A');//卡牌正面直接设置为A，需要从玩法中的桌子中牌来重新设置
+                }, index * 200); // 每张卡牌间隔200ms
+            });
+            if (1) return cardElements.length;//加入判断逻辑，质疑是否成功
+        }
+        //进行开枪测试
+        function gun() {
+
+
+            var buffer = document.getElementById('opponent2')
+            var right = buffer.querySelector('.character-item-right')
+            var head = buffer.querySelector('.character-head')
+            const rightoriginal = right.textContent
+            const headoriginal = head.textContent
+            right.textContent = '🔫'
+            head.textContent = '😱'
+            right.classList.add('gun-animation');
+            // 动画结束后改变头部为骷髅
+            right.addEventListener('animationend', function animationEndHandler() {
+                const isDead = Math.random() > 0.833;
+                if (isDead) {
+                    head.textContent = '💀';
+                    right.textContent = '⚰️';
+                }
+                else {
+                    head.textContent = headoriginal
+                    right.textContent = rightoriginal
+                }
+                right.classList.remove('gun-animation');
+                right.removeEventListener('animationend', animationEndHandler);
+            });
+        }
+
+        const isChallengeSuccess = checkcard();
+        if (isChallengeSuccess != 0) {
+            setTimeout(gun, (isChallengeSuccess + 1) * 200);
+            setTimeout(() => {
+                const playedCards = document.getElementById('playedCards');
+                playedCards.innerHTML = '';
+                playedCards.style.visibility = 'hidden';
+            }, (isChallengeSuccess + 2) * 200);
+        }
+        else {
+            setTimeout(() => {
+                const playedCards = document.getElementById('playedCards');
+                playedCards.innerHTML = '';
+                playedCards.style.visibility = 'hidden';
+            }, (isChallengeSuccess + 1) * 200);
+        }
+
+    }
+
+
+
+    loadImages();
 
 </script>
-
 
 </html>

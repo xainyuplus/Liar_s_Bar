@@ -1,416 +1,439 @@
+
+这个是AI给的，我认为它写的前端不好，但是函数可以参考，还在自己的index里写吧
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>骗子酒馆 - 游戏进行</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #2c3e50;
-            color: #ecf0f1;
-        }
-        
-        /* 游戏状态显示区域 */
-        #game-info {
-            background-color: #34495e;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        #target-card {
-            font-size: 24px;
-            font-weight: bold;
-            color: #e74c3c;
-        }
-        
-        #current-player {
-            font-size: 18px;
-            color: #3498db;
-        }
-        
-        /* 玩家信息区域 */
-        .players-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .player-info {
-            background-color: #34495e;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid transparent;
-        }
-        
-        .player-info.current-player {
-            border-color: #3498db;
-            background-color: #2980b9;
-        }
-        
-        .player-info.my-player {
-            border-color: #27ae60;
-        }
-        
-        .player-info.eliminated {
-            opacity: 0.5;
-            background-color: #7f8c8d;
-        }
-        
-        .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .player-name {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .player-hp {
-            background-color: #e74c3c;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-        
-        .player-cards {
-            display: flex;
-            gap: 3px;
-            flex-wrap: wrap;
-        }
-        
-        /* 卡牌样式 */
-        .card {
-            background-color: white;
-            color: #2c3e50;
-            width: 32px;
-            height: 45px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-        }
-        
-        .card.selected {
-            background-color: #3498db;
-            color: white;
-            transform: translateY(-5px);
-            box-shadow: 0 5px 12px rgba(52, 152, 219, 0.4);
-        }
-        
-        .card.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .card.hidden {
-            background-color: #34495e;
-            color: #7f8c8d;
-        }
-        
-        /* 我的手牌区域 */
-        #my-hand-container {
-            background-color: #27ae60;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        #my-hand {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            min-height: 60px;
-        }
-        
-        /* 桌面区域 */
-        #desk-container {
-            background-color: #16a085;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        #desk-info {
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        #desk-cards {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            min-height: 60px;
-            align-items: center;
-        }
-        
-        /* 操作按钮区域 */
-        #action-panel {
-            background-color: #34495e;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 10px;
-        }
-        
-        button {
-            background-color: #3498db;
-            border: none;
-            color: white;
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-            min-width: 100px;
-        }
-        
-        button:hover:not(:disabled) {
-            background-color: #2980b9;
-        }
-        
-        button:disabled {
-            background-color: #7f8c8d;
-            cursor: not-allowed;
-        }
-        
-        button.danger {
-            background-color: #e74c3c;
-        }
-        
-        button.danger:hover:not(:disabled) {
-            background-color: #c0392b;
-        }
-        
-        button.success {
-            background-color: #27ae60;
-        }
-        
-        button.success:hover:not(:disabled) {
-            background-color: #229954;
-        }
-        
-        /* 游戏结束屏幕 */
-        #game-over-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        #game-over-content {
-            background-color: #34495e;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-            max-width: 400px;
-        }
-        
-        #winner-display {
-            font-size: 32px;
-            font-weight: bold;
-            color: #f1c40f;
-            margin-bottom: 20px;
-        }
-        
-        .screen {
-            transition: opacity 0.3s ease-in-out;
-        }
-        
-        .screen.hidden {
-            display: none;
-        }
-        
-        /* 轮盘赌模态框 */
-        #roulette-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        #roulette-content {
-            background-color: #34495e;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .roulette-wheel {
-            width: 200px;
-            height: 200px;
-            border: 4px solid #ecf0f1;
-            border-radius: 50%;
-            margin: 20px auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 48px;
-            background-color: #2c3e50;
-        }
-        
-        .roulette-wheel.spinning {
-            animation: spin 2s linear;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(1080deg); }
-        }
-        
-        /* 响应式设计 */
-        @media (max-width: 600px) {
-            .players-container {
-                grid-template-columns: 1fr;
-            }
-            
-            #my-hand .card,
-            #desk-cards .card {
-                width: 28px;
-                height: 40px;
-                font-size: 10px;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-    </style>
+    <title>骗子酒馆</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/lobby.css">
+    <link rel="stylesheet" href="css/game.css">
 </head>
 <body>
-    <!-- 游戏进行屏幕 -->
-    <div id="game-playing" class="screen">
+    <!-- 连接状态指示器 -->
+    <div id="connection-indicator" class="connection-indicator disconnected">
+        <span id="connection-text">连接中...</span>
+    </div>
+
+    <!-- 场景1: 欢迎/大厅屏幕 -->
+    <div id="lobby-screen" class="screen active">
+        <div class="lobby-container">
+            <header class="game-header">
+                <h1>🍺 骗子酒馆</h1>
+                <p class="game-subtitle">策略、欺骗与运气的较量</p>
+            </header>
+            
+            <!-- 游戏介绍 -->
+            <div class="game-intro">
+                <div class="intro-section">
+                    <h3>🎯 游戏规则</h3>
+                    <ul>
+                        <li>每人5张手牌，包含J、Q、K和万能的Joker</li>
+                        <li>轮流出牌并声称是"目标牌"，可以说谎！</li>
+                        <li>下家可以选择信任或质疑</li>
+                        <li>质疑失败者进入俄罗斯轮盘赌</li>
+                        <li>最后存活的玩家获胜</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 玩家信息输入 -->
+            <div class="player-setup" id="player-setup">
+                <div class="input-group">
+                    <label for="player-name">玩家昵称</label>
+                    <input type="text" id="player-name" placeholder="输入您的昵称" maxlength="12">
+                </div>
+                
+                <div class="room-options">
+                    <button class="option-btn active" id="create-room-option" onclick="selectRoomOption('create')">
+                        🏠 创建房间
+                    </button>
+                    <button class="option-btn" id="join-room-option" onclick="selectRoomOption('join')">
+                        🚪 加入房间
+                    </button>
+                </div>
+                
+                <div class="join-room-form hidden" id="join-room-form">
+                    <div class="input-group">
+                        <label for="room-code">房间代码</label>
+                        <input type="text" id="room-code" placeholder="输入6位房间代码" maxlength="6">
+                    </div>
+                </div>
+                
+                <button class="start-btn" id="start-game-btn" onclick="startOrJoinGame()">
+                    开始游戏
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 场景2: 等待房间屏幕 -->
+    <div id="waiting-room-screen" class="screen hidden">
+        <div class="waiting-container">
+            <header class="room-header">
+                <h2>🏠 房间</h2>
+                <div class="room-code-display">
+                    <span>房间代码: </span>
+                    <span id="room-code-display" class="room-code">------</span>
+                    <button onclick="copyRoomCode()" class="copy-btn">📋</button>
+                </div>
+            </header>
+            
+            <div class="players-waiting" id="players-waiting">
+                <h3>等待玩家加入 (<span id="player-count">0</span>/8)</h3>
+                <div class="players-grid" id="waiting-players-grid">
+                    <!-- 动态生成等待中的玩家 -->
+                </div>
+            </div>
+            
+            <div class="waiting-actions">
+                <button id="start-game-host-btn" class="start-btn hidden" onclick="hostStartGame()">
+                    开始游戏
+                </button>
+                <div id="waiting-message" class="waiting-message">
+                    等待房主开始游戏...
+                </div>
+                <button onclick="leaveRoom()" class="leave-btn">
+                    离开房间
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 场景3: 游戏进行屏幕 -->
+    <div id="game-screen" class="screen hidden">
         <!-- 游戏状态信息 -->
-        <div id="game-info">
-            <div>
-                <span>目标牌: </span>
-                <span id="target-card">-</span>
+        <div class="game-info">
+            <div class="game-status">
+                <div class="target-card-display">
+                    <span>目标牌: </span>
+                    <span id="target-card" class="target-card">-</span>
+                </div>
+                <div id="current-player" class="current-player-info">等待开始...</div>
+                <div class="game-round">
+                    <span>第 <span id="round-number">1</span> 回合</span>
+                </div>
             </div>
-            <div id="current-player">等待开始...</div>
-            <div>
-                <button onclick="returnToLobby()">返回大厅</button>
-            </div>
+            <button onclick="showGameMenu()" class="menu-btn">☰</button>
         </div>
         
         <!-- 其他玩家信息 -->
-        <div class="players-container" id="other-players">
-            <!-- 动态生成其他玩家信息 -->
+        <div class="other-players-container">
+            <div class="players-grid" id="game-players-grid">
+                <!-- 动态生成其他玩家信息 -->
+            </div>
         </div>
         
         <!-- 桌面区域 -->
-        <div id="desk-container">
-            <div id="desk-info">桌面: 等待出牌</div>
-            <div id="desk-cards">
+        <div class="desk-container">
+            <div class="desk-info" id="desk-info">桌面: 等待出牌</div>
+            <div class="desk-cards" id="desk-cards">
                 <!-- 动态显示桌面卡牌 -->
             </div>
         </div>
         
         <!-- 我的手牌 -->
-        <div id="my-hand-container">
-            <div style="text-align: center; margin-bottom: 10px;">
+        <div class="my-hand-container">
+            <div class="hand-header">
                 <strong>我的手牌</strong>
+                <span id="my-hand-count">(0张)</span>
             </div>
-            <div id="my-hand">
+            <div id="my-hand" class="my-hand">
                 <!-- 动态显示我的手牌 -->
             </div>
         </div>
         
         <!-- 操作面板 -->
-        <div id="action-panel">
-            <div id="action-message">请选择卡牌并出牌</div>
+        <div class="action-panel">
+            <div id="action-message" class="action-message">请选择卡牌并出牌</div>
             <div class="action-buttons">
-                <button id="play-cards-btn" onclick="playCards()" disabled>
+                <button id="play-cards-btn" onclick="playCards()" disabled class="play-btn">
                     出牌 (0/3)
                 </button>
-                <button id="challenge-btn" onclick="challenge()" disabled class="danger">
+                <button id="challenge-btn" onclick="challenge()" disabled class="challenge-btn">
                     质疑
                 </button>
-                <button id="trust-btn" onclick="trust()" disabled class="success">
+                <button id="trust-btn" onclick="trust()" disabled class="trust-btn">
                     信任
                 </button>
             </div>
         </div>
     </div>
-    
-    <!-- 游戏结束屏幕 -->
+
+    <!-- 场景4: 游戏结束屏幕 -->
     <div id="game-over-screen" class="screen hidden">
-        <div id="game-over-content">
-            <div id="winner-display">游戏结束</div>
-            <div id="game-stats">
+        <div class="game-over-container">
+            <div id="winner-display" class="winner-display">游戏结束</div>
+            
+            <div class="game-stats" id="game-stats">
                 <!-- 显示游戏统计 -->
             </div>
-            <div style="margin-top: 30px;">
-                <button onclick="returnToLobby()" style="margin-right: 10px;">
-                    返回大厅
-                </button>
-                <button onclick="playAgain()" class="success">
+            
+            <div class="final-ranking" id="final-ranking">
+                <!-- 显示最终排名 -->
+            </div>
+            
+            <div class="game-over-actions">
+                <button onclick="playAgain()" class="play-again-btn">
                     再来一局
+                </button>
+                <button onclick="returnToLobby()" class="return-lobby-btn">
+                    返回大厅
                 </button>
             </div>
         </div>
     </div>
-    
+
     <!-- 轮盘赌模态框 -->
-    <div id="roulette-modal" class="screen hidden">
-        <div id="roulette-content">
-            <h2>俄罗斯轮盘赌</h2>
-            <div id="roulette-player">玩家X 正在进行轮盘赌...</div>
-            <div class="roulette-wheel" id="roulette-wheel">🔫</div>
-            <div id="roulette-result" style="margin-top: 20px; font-size: 18px;"></div>
-            <button id="spin-btn" onclick="spinRoulette()" style="margin-top: 20px;" class="hidden">
+    <div id="roulette-modal" class="modal hidden">
+        <div class="modal-content roulette-content">
+            <h2>🔫 俄罗斯轮盘赌</h2>
+            <div id="roulette-player" class="roulette-player">玩家X 正在进行轮盘赌...</div>
+            
+            <div class="roulette-wheel-container">
+                <div class="roulette-wheel" id="roulette-wheel">
+                    <div class="wheel-chambers">
+                        <div class="chamber"></div>
+                        <div class="chamber"></div>
+                        <div class="chamber"></div>
+                        <div class="chamber"></div>
+                        <div class="chamber"></div>
+                        <div class="chamber"></div>
+                    </div>
+                    <div class="wheel-center">🔫</div>
+                </div>
+            </div>
+            
+            <div id="roulette-result" class="roulette-result"></div>
+            
+            <button id="spin-btn" onclick="spinRoulette()" class="spin-btn hidden">
                 开枪
             </button>
         </div>
     </div>
 
-    <!-- 引入Socket.IO和游戏模块 -->
+    <!-- 游戏菜单模态框 -->
+    <div id="game-menu-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>游戏菜单</h3>
+            <div class="menu-options">
+                <button onclick="showGameRules()" class="menu-option">
+                    📖 游戏规则
+                </button>
+                <button onclick="showGameStats()" class="menu-option">
+                    📊 游戏统计
+                </button>
+                <button onclick="toggleSound()" class="menu-option">
+                    🔊 音效设置
+                </button>
+                <button onclick="leaveGame()" class="menu-option danger">
+                    🚪 离开游戏
+                </button>
+            </div>
+            <button onclick="closeGameMenu()" class="close-btn">关闭</button>
+        </div>
+    </div>
+
+    <!-- 加载所有JavaScript模块 -->
     <script src="/socket.io/socket.io.js"></script>
-    <script src="js/GameState.js"></script>
-    <script src="js/CardManager.js"></script>
-    <script src="js/game.js"></script>
+    
+    <!-- 核心模块 -->
+    <script src="js/socket-client.js"></script>
+    <script src="js/game/GameState.js"></script>
+    
+    <!-- UI组件 -->
+    <script src="js/components/Card.js"></script>
+    <script src="js/components/Hand.js"></script>
+    <script src="js/screens/GameScreen.js"></script>
+    
+    <!-- 工具模块 -->
+    <script src="js/utils/animationUtils.js"></script>
+    <script src="js/utils/soundManager.js"></script>
+    
+    <!-- 屏幕管理器 -->
+    <script src="js/screens/LobbyScreen.js"></script>
+    
+    <!-- 主控制器 -->
+    <script src="js/main.js"></script>
+    
+    <script>
+        // 全局变量
+        let currentRoomOption = 'create'; // 'create' 或 'join'
+        
+        // 房间选项切换
+        function selectRoomOption(option) {
+            currentRoomOption = option;
+            
+            const createBtn = document.getElementById('create-room-option');
+            const joinBtn = document.getElementById('join-room-option');
+            const joinForm = document.getElementById('join-room-form');
+            
+            if (option === 'create') {
+                createBtn.classList.add('active');
+                joinBtn.classList.remove('active');
+                joinForm.classList.add('hidden');
+            } else {
+                createBtn.classList.remove('active');
+                joinBtn.classList.add('active');
+                joinForm.classList.remove('hidden');
+            }
+        }
+        
+        // 开始或加入游戏
+        function startOrJoinGame() {
+            const playerName = document.getElementById('player-name').value.trim();
+            
+            if (!playerName) {
+                alert('请输入玩家昵称');
+                return;
+            }
+            
+            if (currentRoomOption === 'create') {
+                createRoom(playerName);
+            } else {
+                const roomCode = document.getElementById('room-code').value.trim();
+                if (!roomCode) {
+                    alert('请输入房间代码');
+                    return;
+                }
+                joinRoom(playerName, roomCode);
+            }
+        }
+        
+        // 创建房间
+        function createRoom(playerName) {
+            if (window.socketClient && window.socketClient.isConnected()) {
+                window.socketClient.emit('create_room', { playerName });
+            } else {
+                alert('正在连接服务器，请稍后...');
+            }
+        }
+        
+        // 加入房间
+        function joinRoom(playerName, roomCode) {
+            if (window.socketClient && window.socketClient.isConnected()) {
+                window.socketClient.emit('join_room', { playerName, roomCode });
+            } else {
+                alert('正在连接服务器，请稍后...');
+            }
+        }
+        
+        // 复制房间代码
+        function copyRoomCode() {
+            const roomCodeEl = document.getElementById('room-code-display');
+            const roomCode = roomCodeEl.textContent;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(roomCode).then(() => {
+                    showToast('房间代码已复制');
+                });
+            } else {
+                // 降级方案
+                const textArea = document.createElement('textarea');
+                textArea.value = roomCode;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('房间代码已复制');
+            }
+        }
+        
+        // 房主开始游戏
+        function hostStartGame() {
+            if (window.socketClient) {
+                window.socketClient.emit('start_game', {
+                    roomCode: window.gameState.roomCode
+                });
+            }
+        }
+        
+        // 离开房间
+        function leaveRoom() {
+            if (confirm('确定要离开房间吗？')) {
+                if (window.socketClient) {
+                    window.socketClient.emit('leave_room', {
+                        roomCode: window.gameState.roomCode
+                    });
+                }
+                showScreen('lobby');
+            }
+        }
+        
+        // 屏幕切换函数
+        function showScreen(screenName) {
+            // 隐藏所有屏幕
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+                screen.classList.remove('active');
+            });
+            
+            // 显示目标屏幕
+            const targetScreen = document.getElementById(screenName + '-screen');
+            if (targetScreen) {
+                targetScreen.classList.remove('hidden');
+                targetScreen.classList.add('active');
+            }
+            
+            // 更新body类名用于样式
+            document.body.className = `screen-${screenName}`;
+        }
+        
+        // 显示toast消息
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 6px;
+                color: white;
+                font-size: 14px;
+                z-index: 10000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.style.transform = 'translateX(0)', 10);
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，初始化游戏...');
+            
+            // 确保显示大厅屏幕
+            showScreen('lobby');
+            
+            // 请求通知权限
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(event) {
+            // 在大厅界面按Enter快速开始
+            if (document.getElementById('lobby-screen').classList.contains('active')) {
+                if (event.key === 'Enter') {
+                    const playerNameInput = document.getElementById('player-name');
+                    if (document.activeElement === playerNameInput && playerNameInput.value.trim()) {
+                        startOrJoinGame();
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

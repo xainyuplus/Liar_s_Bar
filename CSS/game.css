@@ -1,1 +1,817 @@
 /* game css */ 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 设置页面主体的字体、背景渐变和最小高度，隐藏溢出内容 */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    min-height: 100vh;
+   /* overflow: hidden;*/
+}
+
+/* 游戏容器样式，设置宽度、高度，使用相对定位和弹性布局 */
+.game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 游戏主区域样式，使用弹性布局，占据剩余空间 */
+.game-main {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+/* 对手区域样式，使用绝对定位和弹性布局，设置过渡效果和层级 */
+.opponent {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+/* 激活状态的对手信息样式，设置背景渐变、颜色、缩放和阴影 */
+.opponent.active .opponent-info {
+    background: linear-gradient(45deg, #FF6B35, #F7931E);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 12px 35px rgba(255, 107, 53, 0.4);
+}
+
+/* 第一个对手的位置样式，位于顶部中央 */
+.opponent:nth-child(1) {
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* 第二个对手的位置样式，位于左侧中间 */
+.opponent:nth-child(2) {
+    top: 50%;
+    left: 28%;
+    transform: translateY(-50%);
+}
+
+/* 第三个对手的位置样式，位于右侧中间 */
+.opponent:nth-child(3) {
+    top: 50%;
+    right: 28%;
+    transform: translateY(-50%);
+}
+
+/* 对手椅子样式，默认隐藏 */
+.opponent-chair {
+    display: none;
+}
+
+/* 对手角色样式，使用相对定位和弹性布局 */
+.opponent-character {
+    position: relative;
+    margin-bottom: 15px;
+    width: 120px;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 对手角色头部样式，设置字体大小、边距和动画效果 */
+.character-head {
+    font-size: 32px;
+    margin-bottom: -6px;
+    z-index: 4;
+    animation: gentle-bounce 3s ease-in-out infinite;
+}
+
+/* 对手角色配饰样式，使用绝对定位，设置字体大小、边距和动画效果 */
+.character-accessory {
+    position: absolute;
+    top: -12px;
+    left: 33%;
+    transform: translate(-50%, -50%);
+    /* 中心点对齐 */
+    font-size: 30px;
+    z-index: 5;
+    animation: gentle-bounce 3s ease-in-out infinite 0.2s;
+}
+
+/* 对手角色衣服样式，设置字体大小、边距和动画效果 */
+.character-clothes {
+    font-size: 52px;
+    margin-top: -12px;
+    z-index: 3;
+    animation: gentle-bounce 3s ease-in-out infinite 0.1s;
+}
+
+/* 对手角色左侧物品样式，使用绝对定位，设置字体大小、边距和动画效果 */
+.character-item-left {
+    position: absolute;
+    top: 55%;
+    left: 15px;
+    font-size: 20px;
+    z-index: 5;
+    animation: gentle-float 5s ease-in-out infinite;
+}
+
+/* 对手角色右侧物品样式，使用绝对定位，设置字体大小、边距和动画效果 */
+.character-item-right {
+    position: absolute;
+    top: 55%;
+    right: 15px;
+    font-size: 20px;
+    z-index: 5;
+    animation: gentle-float 5s ease-in-out infinite 1s;
+}
+
+/* /* 轻微弹跳动画关键帧 */
+@keyframes gentle-bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-3px);
+    }
+
+    60% {
+        transform: translateY(-1px);
+    }
+}
+
+/* 轻微浮动动画关键帧 */
+@keyframes gentle-float {
+
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-3px) rotate(5deg);
+    }
+}
+
+*/
+
+/* 子弹计数器样式，使用绝对定位，设置背景、颜色、边框和阴影 */
+.bullet-counter {
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 子弹显示区域样式，使用弹性布局 */
+.bullet-display {
+    display: flex;
+    gap: 2px;
+}
+
+/* 子弹样式，设置宽度、高度、背景、边框和阴影 */
+.bullet {
+    width: 7px;
+    height: 10px;
+    background: #FFD700;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* 已使用子弹样式，设置背景和透明度 */
+.bullet.used {
+    background: #666;
+    opacity: 0.5;
+}
+
+/* 对手信息样式，设置背景、边框、内边距、文本对齐和阴影 */
+.opponent-info {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 6px 12px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.opponent1-info {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 6px 12px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+/* 对手名称样式，设置字体大小、粗细和边距 */
+.opponent-name {
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+/* 对手牌数量样式，设置字体大小和透明度 */
+.opponent-cards {
+    font-size: 9px;
+    opacity: 0.8;
+}
+
+/* 右上角目标牌区域样式，使用绝对定位，设置背景、边框、内边距、文本对齐和阴影 */
+.target-area {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    min-width: 120px;
+}
+
+/* 目标牌标签样式，设置字体大小、颜色、边距和粗细 */
+.target-label {
+    font-size: 14px;
+    color: #8B4513;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* 目标牌样式，设置字体大小、颜色和边距 */
+.target-card {
+    font-size: 48px;
+    color: #FF6B35;
+    margin-bottom: 10px;
+}
+
+/* 回合信息样式，设置字体大小和颜色 */
+.round-info {
+    font-size: 12px;
+    color: #A0522D;
+}
+
+/* 左上角倒计时区域样式，使用绝对定位，设置背景、边框、宽度、高度、显示方式和阴影 */
+.timer-area {
+    position: absolute;
+    bottom: 10%;
+    right: 25%;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* 倒计时样式，设置字体大小、粗细和颜色 */
+.timer {
+    font-size: 24px;
+    font-weight: bold;
+    color: #FF6B35;
+}
+
+/* 中央桌面区域样式，使用绝对定位，设置位置和层级 */
+.table-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+/* 椭圆形牌桌样式，设置背景、边框、边框半径、宽度、高度、显示方式、阴影和透视效果 */
+.table-center {
+    /* 使用图片替代CSS绘制 */
+    background-image: url('../assets/images/backgrounds/table.png');
+    /* 替换为实际图片路径 */
+    background-size: 100% 100%;
+    /* 图片覆盖整个牌桌区域 */
+    background-repeat: no-repeat;
+    background-position: center;
+
+    /* 移除原来的背景、边框、渐变等样式 */
+    border: none;
+    border-radius: 0;
+    width: 600px;
+    /* 调整宽度以适应图片 */
+    height: 600px;
+    /* 调整高度以适应图片 */
+
+    /* 保留其他必要样式 */
+    z-index: -1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+
+/* 已出牌区域样式，设置背景、边框、内边距、最小高度、显示方式和间距 */
+.played-cards-area {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 15px;
+    min-height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 已出牌样式，设置宽度、高度、背景、边框、显示方式、对齐方式、颜色、字体大小和阴影 */
+.played-card {
+    width: 40px;
+    height: 56px;
+    background: none;
+    /*linear-gradient(45deg, #8B4513, #A0522D);*/
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 出牌信息样式，设置文本对齐和颜色 */
+.played-info {
+    text-align: center;
+    color: #8B4513;
+    font-size: 12px;
+}
+
+/* 枪区域样式，使用绝对定位，设置背景、边框、宽度、高度、显示方式、对齐方式、光标和阴影 */
+.gun-area {
+    position: absolute;
+    bottom: -25px;
+    right: -25px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border: 3px solid rgba(255, 107, 53, 0.3);
+}
+
+/* 枪区域悬停样式，设置背景、缩放和边框颜色 */
+.gun-area:hover {
+    background: rgba(255, 107, 53, 0.9);
+    transform: scale(1.15);
+    border-color: rgba(255, 107, 53, 0.6);
+}
+
+/* 枪样式，设置字体大小 */
+.gun {
+    font-size: 28px;
+}
+
+/*质疑开枪*/
+
+
+@keyframes gunAnimation {
+    0% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-60px);
+    }
+
+    /* 上升到头部位置 */
+    60% {
+        transform: translateY(-60px) translateX(10px);
+    }
+
+    /* 后坐力效果 */
+    70% {
+        transform: translateY(-60px) translateX(-10px);
+    }
+
+    /* 后坐力反弹 */
+    80% {
+        transform: translateY(-60px) translateX(5px);
+    }
+
+    /* 后坐力衰减 */
+    90% {
+        transform: translateY(-60px) translateX(-2px);
+    }
+
+    /* 后坐力结束 */
+    100% {
+        transform: translateY(0);
+    }
+
+    /* 回到原位 */
+}
+
+.gun-animation {
+    animation: gunAnimation 1s ease-in-out forwards;
+}
+
+/* 底部手牌区域样式，使用固定定位，设置位置、高度、显示方式、背景和内边距 */
+.hand-area {
+    position: fixed;
+    bottom: 5%;
+    left: 35%;
+    right: 0;
+    width: 30%;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to top,
+            rgba(255, 236, 210, 0.2) 0%,
+            rgba(252, 182, 159, 0.1) 40%,
+            rgba(255, 236, 210, 0.05) 80%,
+            transparent 100%);
+    backdrop-filter: blur(4px);
+    padding: 20px;
+    z-index: 20;
+}
+
+/* 手牌区域样式，使用弹性布局和间距 */
+.hand-cards {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* 手牌样式，设置宽度、高度、背景、边框、显示方式、对齐方式、光标、过渡效果、字体大小、颜色和阴影 */
+.hand-card {
+    width: 70px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 24px;
+    color: #8B4513;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 手牌悬停样式，设置缩放、阴影和边框颜色 */
+.hand-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 107, 53, 0.6);
+}
+
+/* 选中手牌样式，设置边框颜色、背景、缩放和阴影 */
+.hand-card.selected {
+    border-color: #FF6B35;
+    background: rgba(255, 107, 53, 0.15);
+    transform: translateY(-15px);
+    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+}
+
+/* 行动按钮区域样式，使用弹性布局和间距 */
+.action-area {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+/* 行动按钮样式，设置背景、颜色、边框、内边距、边框半径、字体大小、粗细、光标、过渡效果和阴影 */
+.action-btn {
+    background: linear-gradient(45deg, #FF6B35, #F7931E);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+/* 行动按钮悬停样式，设置缩放、阴影和背景 */
+.action-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+    background: linear-gradient(45deg, #FF6B35, #F7931E);
+}
+
+/* 禁用行动按钮样式，设置背景和光标 */
+.action-btn:disabled {
+    background: #CCC;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* 质疑按钮样式，设置背景 */
+.challenge-btn {
+    background: linear-gradient(45deg, #DC3545, #C82333);
+}
+
+/* 质疑按钮悬停样式，设置背景 */
+.challenge-btn:hover:not(:disabled) {
+    background: linear-gradient(45deg, #DC3545, #C82333);
+}
+
+/* 选择信息样式，设置颜色、字体大小和边距 */
+.selection-info {
+    color: #8B4513;
+    font-size: 14px;
+    margin: 0 15px;
+}
+
+/* 表情与聊天区域 */
+.chat-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 280px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(45deg, #FF6B35, #F7931E);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.chat-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.chat-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.chat-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    min-height: 120px;
+    max-height: 200px;
+}
+
+.chat-message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    animation: fadeInUp 0.3s ease;
+}
+
+.chat-message.system {
+    background: rgba(139, 69, 19, 0.1);
+    color: #8B4513;
+    text-align: center;
+}
+
+.chat-message.player {
+    background: rgba(255, 107, 53, 0.1);
+    color: #8B4513;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#expressionArea {
+    display: none;
+}
+
+.expression-area {
+    flex: 1;
+    display: none;
+    padding: 15px;
+    overflow-y: auto;
+    min-height: 120px;
+    max-height: 200px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.expression-label {
+
+    font-size: 12px;
+    color: #8B4513;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.expression-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.expression-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #DDD;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.expression-btn:hover {
+    background: rgba(255, 107, 53, 0.2);
+    transform: scale(1.1);
+    border-color: #FF6B35;
+}
+
+.toggle {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #DDD;
+    border-radius: 8px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #8B4513;
+}
+
+.toggle:hover {
+    background: rgba(255, 107, 53, 0.2);
+}
+
+.toggle-buttons {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #DDD;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #8B4513;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.quick-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.quick-msg-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #DDD;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #8B4513;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.quick-msg-btn:hover {
+    background: rgba(255, 107, 53, 0.1);
+    border-color: #FF6B35;
+}
+
+/* 淡入向上动画关键帧 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+/* 游戏状态提示样式，使用绝对定位，设置位置、背景、边框、内边距、文本对齐、阴影和隐藏 */
+.game-status {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    display: none;
+}
+
+/* 显示游戏状态提示样式 */
+.game-status.show {
+    display: block;
+}
+
+/* 表情反馈动画关键帧 */
+@keyframes expressionPop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
+/* 震动动画关键帧 */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    25% {
+        transform: translateX(-50%) translateY(-2px) rotate(-2deg);
+    }
+
+    75% {
+        transform: translateX(-50%) translateY(2px) rotate(2deg);
+    }
+}

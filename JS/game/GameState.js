@@ -2,7 +2,7 @@
  * game/GameState.js - 精细化游戏状态管理
  * 专注于游戏状态的存储、更新和查询，不包含UI逻辑
  */
-
+//增设匹配时的相关信息之后就能用，现在的比较重要的事情是，把人机的部分设计好
 class GameState {
     constructor() {
         // 房间基础信息
@@ -126,7 +126,6 @@ class GameState {
         this.isHost = isHost;
         
         this.saveToStorage();
-        this.emit('room_info_changed', { roomCode, playerId, playerName, isHost });
     }
     
     /**
@@ -831,7 +830,7 @@ class GameState {
 window.gameState = new GameState();
 
 // 开发环境下的调试工具
-if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+/* if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     window.debugGameState = {
         getState: () => window.gameState.exportStateForDebug(),
         validateState: () => window.gameState.validateState(),
@@ -843,4 +842,4 @@ if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     };
     
     console.log('调试工具已加载，使用 window.debugGameState 访问');
-}
+} */

@@ -6,6 +6,7 @@ class Room {
     this.id = id;                // 房间ID
     this.hostId = hostId;        // 房主ID
     this.players =new Map();           // 玩家列表
+    this.playersList=[];//用来发给前端的
     this.gameManager = new GameManager(this);      // 游戏状态
     this.deck = null;            // 牌堆
     this.phase = 'WAITING';      // 房间阶段：WAITING, PLAYING, ENDED
@@ -20,6 +21,8 @@ class Room {
  addPlayer(playerInfo) {
     const player = new Player(playerInfo);
     this.players.set(player.id, player);
+
+    this.playersList.push(playerInfo);
   }
 
   
@@ -27,7 +30,10 @@ class Room {
     // 移除玩家
     const isRemoved = this.players.delete(playerId);
     if (isRemoved) {
+      // 从 playersList 中移除对应的玩家信息
+      this.playersList = this.playersList.filter(player => player.id !== playerId);
       console.log(`玩家 ${playerId} 已从房间 ${this.id} 中移除`);
+      
     } else {
       console.log(`未找到玩家 ${playerId}，移除失败`);
     }
