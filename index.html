@@ -404,14 +404,11 @@
          </div>
       </div>
 
-      <!-- 游戏状态提示 ,这玩意以后肯定要删掉，先保留看一下-->
-      <div class="game-status" id="gameStatus">
-         <!-- 质疑结果标题 -->
-         <h3>质疑结果</h3>
-         <!-- 质疑结果信息 -->
-         <p>质疑成功！对方撒谎了</p>
-         <!-- 继续游戏按钮，点击触发隐藏状态函数 -->
-         <button class="action-btn" onclick="hideStatus()">继续游戏</button>
+      <!-- 游戏状态提示 ,这玩意以后肯定要删掉，仅供调试-->
+      <div class="game-event-info" id="gameEventInfo">
+         <h3>游戏事件信息</h3>
+         <div id="eventMessages"></div>
+         <button class="action-btn" onclick="clearEventMessages()">清除信息</button>
       </div>
 
    </div>
@@ -778,37 +775,66 @@
       roomInfo.gamemanager.targetCard = data.targetCard; //更新目标牌
       set_target(data.targetCard); //更新目标牌
       console.log("目标牌：" + roomInfo.gamemanager.targetCard);
+      showGameEventMessage("目标牌：" + roomInfo.gamemanager.targetCard);
       socket.emit('deal_cards', { playerId: thisplayerInfo.id, roomId: roomInfo.roomId }); //发送发牌请求
       console.log("发送了发牌请求");
+      showGameEventMessage("发送了发牌请求");
 
    })
    socket.on('cards_dealt', (data) => {
       roomInfo.gamemanager.hands = data; //更新已出的牌
       console.log(data);
       console.log("收到了发牌信息");
+      showGameEventMessage("收到了发牌信息");
       console.log(roomInfo.gamemanager.hands);
-            setTimeout(() => { if (dealCards()) setTimeout(drawCard, 1300) }, 500);
+      setTimeout(() => { if (dealCards()) setTimeout(drawCard, 1300) }, 500);
       //发牌动画
+   });
+   socket.on('start_timer', (timestamp) => {
+      showGameEventMessage("开始倒计时");
+      const timerElement = document.getElementById('timer');
+      if (!timerElement) return;
+
+      // 清除现有定时器
+      if (timerInterval) {
+         clearInterval(timerInterval);
+      }
+      const now = Date.now();
+      const delay = timestamp - now;
+
+      // 如果时间戳已经过去，立即开始倒计时
+      if (delay <= 0) {
+         startCountdown(timerElement);
+      } else {
+         // 在指定时间戳触发倒计时
+         setTimeout(() => {
+            startCountdown(timerElement);
+         }, delay);
+      }
+   });
+   socket.on('card_played', (data) => {
+      console.log("收到了出牌信息");
+      showGameEventMessage("收到了出牌信息");
+      console.log(data); 
    });
    //接下来首先把game界面自身的一些测试函数给去掉
    //然后呢，我们就去写发牌，取牌，出牌等等的前后端逻辑，确保能玩
    //至于页面上需要调整的，到时候再说吧
-   //然后呢，适当把代码拆分一下？
-   //首先呢，我们把要拆除的函数给提出来吧
+   //然后呢，适当把代码拆分一下
 </script>
 <script>
    //以下是游戏界面的初始化和动画的代码，我认为肯定存在大量冗余，以后改
    //而且有些函数的逻辑本该属于后端，再说吧
    toggleChat();
    document.getElementById('playedCards').style.visibility = 'hidden';
-   const allcard = ["A", "Q", "K"];
-   const play1 = ["A", "Q", "K", "joker", "joker"];
+   //const allcard = ["A", "Q", "K"];
+   //const play1 = ["A", "Q", "K", "joker", "joker"];（均已丧失作用）
    let selectedCards = [];
    let timerInterval;
-   let currentTime = 30;
+   let currentTime ;
 
    //const deck = initDeck();
-   //initdeck已经删掉了
+   //initdeck已经删掉了，没一点用
    // 图片对象
    const cardImages = {
       'A': new Image(),
@@ -872,7 +898,7 @@
 
    }
    //选出目标牌，与目标牌绘制（背景）有重复逻辑，这里由newround改为set_target()(英文有问题先不管了)
-   //就是现有一个局内信息的记录和更新，再把目标牌类型传递过来，就这样，over
+   //就是现有一个局内信息的记录和更新，再把目标牌类型传递过来，就这样，over（已解决）
    function set_target(nowcard) {
       const targetArea = document.getElementById('targetCard');
       // 清空现有内容
@@ -890,7 +916,7 @@
       setTimeout(() => {
          flipCard(ctx, targetcanvas.width, targetcanvas.height, nowcard);
       }, 1000);
-      Timer();
+      //Timer();
    }
    //翻转牌动画
    function flipCard(ctx, width, height, nowcard) {
@@ -940,7 +966,7 @@
    }
    //出牌
 
-   // 玩家位置
+   // 玩家位置（这个肯定要替换掉）
    const playersPos = [
       {
          id: 'opponent1',
@@ -1079,11 +1105,12 @@
       playedCards.innerHTML = '';
       playedCards.style.visibility = 'hidden';
       const handCards = document.getElementById('handCards');
-      roomInfo.gamemanager.hands.forEach(({id: cardId, value: cardValue}) => {
+      roomInfo.gamemanager.hands.forEach(({ id: cardId, value: cardValue }) => {
          const cardContainer = document.createElement('div');
          cardContainer.className = 'hand-card';
          cardContainer.dataset.value = cardValue;
          cardContainer.dataset.clicked = "false"; // 初始化点击状态
+         cardContainer.dataset.id = cardId;
 
          const frontCanvas = document.createElement('canvas');
          frontCanvas.width = 70;
@@ -1148,7 +1175,7 @@
          playSelectedButton.classList.add('opacity-50', 'cursor-not-allowed');
       }
    }
-   // 播放卡牌动画
+   // 播放卡牌动画(哦原来这个就是出牌的函数)
    function playSelectedCards() {
       if (selectedCards.length === 0) return;
       // 获取窗口尺寸
@@ -1173,6 +1200,20 @@
             y: playedCardsArea.offsetHeight - 450
          });
       }
+          // 提取选中卡牌的 id 和 value
+      const selectedCardData = selectedCards.map(card => ({
+         id: card.dataset.id, // 假设元素有 data-id 属性
+         value: card.dataset.value
+      }));
+
+      // 发送选中卡牌数据到后端
+      socket.emit('player_cards', {
+         playerId: thisplayerInfo.id,
+         roomId: roomInfo.roomId,
+         cards: selectedCardData
+      });
+      showGameEventMessage("发送了出牌信息");
+
 
       // 保存原始卡牌数据并开始动画
       const originalCards = [...selectedCards];
@@ -1205,7 +1246,7 @@
             initDeckCanvas();
          }
       });
-      Timer();
+      //Timer();
    }
 
    // 卡牌动画函数
@@ -1270,7 +1311,7 @@
    function easeOutCubic(t) {
       return 1 - Math.pow(1 - t, 3);
    }
-   //倒计时
+   //倒计时（是旧的，已经作废）
    function Timer() {
       const timerElement = document.getElementById('timer');
       if (!timerElement) return;
@@ -1298,6 +1339,34 @@
       }
    }
 
+
+
+   // 缓动函数（辅助倒计时）
+   function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+   }
+    // 开始倒计时的函数
+   function startCountdown(timerElement) {
+      // 重置时间
+      currentTime = 15;
+      timerElement.textContent = currentTime;
+
+      // 创建新定时器
+      timerInterval = setInterval(updateTimer, 1000, timerElement);
+   }
+
+   // 更新倒计时的函数
+   function updateTimer(timerElement) {
+      currentTime--;
+      timerElement.textContent = currentTime;
+
+      if (currentTime <= 0) {
+         clearInterval(timerInterval);
+         timerElement.textContent = '时间到！';
+         // 倒计时结束，发送 timer_ended 事件
+         socket.emit('timer_ended');
+      }
+   }
    //表情及聊天
    function toggleChat() {
       const chatContent = document.getElementById('chatContent');
@@ -1453,6 +1522,21 @@
 
    }
 
+   // 显示游戏事件信息的函数
+   function showGameEventMessage(message) {
+      const eventMessagesDiv = document.getElementById('eventMessages');
+      const newMessage = document.createElement('p');
+      newMessage.textContent = message;
+      eventMessagesDiv.appendChild(newMessage);
+      // 自动滚动到最新消息
+      eventMessagesDiv.scrollTop = eventMessagesDiv.scrollHeight;
+   }
+
+   // 清除游戏事件信息的函数
+   function clearEventMessages() {
+      const eventMessagesDiv = document.getElementById('eventMessages');
+      eventMessagesDiv.innerHTML = '';
+   }
 
 
    loadImages();

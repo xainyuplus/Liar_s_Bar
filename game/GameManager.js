@@ -17,6 +17,11 @@ class GameManager {
     this.setRandomTargetCard();
     this.currentPlayerIndex = 0;//这个应该有点问题，以后改
     this.room.io.to(this.room.id).emit('round_started', { targetCard: this.targetCard });
+    //哦关于这个新一轮的信息，我认为有点不完全，可以做一个对象把所有局内信息都发过去吧
+    //不过建议还是拆分一下，用state更新这个函数
+    //信息包括当前玩家，每个玩家的牌数，子弹数，是否存活
+    const startTime = Date.now() + 2000;
+    this.room.io.to(this.room.id).emit('start_timer', startTime); // 30秒倒计时
     //前端接收到这条信息后，再开始发牌动画，并获取手牌信息
     this.dealCards();//发牌
   }
