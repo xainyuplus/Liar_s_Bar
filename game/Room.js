@@ -2,8 +2,9 @@
 const GameManager = require('./GameManager');
 const Player = require('./Player');
 class Room {
-  constructor(id, hostId) {
+  constructor(id, hostId,io) {
     this.id = id;                // 房间ID
+    this.io=io;
     this.hostId = hostId;        // 房主ID
     this.players =new Map();           // 玩家列表
     this.playersList=[];//用来发给前端的
@@ -41,6 +42,7 @@ class Room {
   
   startGame() {
     // 开始游戏
+    this.gameManager.startRound();
   }
   
   handlePlayerAction(playerId, action, data) {

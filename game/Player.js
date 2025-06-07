@@ -21,7 +21,7 @@ class Player {
   }
 
   setHand(cards) {
-    this.hand = [...cards];
+    this.hand = cards;
   }
 
   disconnect() {
