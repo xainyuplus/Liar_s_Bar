@@ -3,6 +3,7 @@
  * 专注于游戏状态的存储、更新和查询，不包含UI逻辑
  */
 //增设匹配时的相关信息之后就能用，现在的比较重要的事情是，把人机的部分设计好
+//AI给的设计太复杂，要大改咯
 class GameState {
     constructor() {
         // 房间基础信息
@@ -18,16 +19,14 @@ class GameState {
         this.lastPlayerId = null;    // 上一个出牌的玩家ID
         this.roulettePlayerId = null; // 正在轮盘赌的玩家ID
         this.roundNumber = 0;        // 当前回合数
-        this.turnNumber = 0;         // 当前轮次数
-        
-        // 玩家信息 - 使用Map存储
-        this.players = new Map();    // playerId -> playerInfo
-        this.playersOrder = [];      // 玩家出牌顺序
-        this.eliminatedPlayers = new Set(); // 已淘汰玩家ID集合
+
+        // 所有玩家信息 - 使用Map存储
+        this.gameInfo = new Map();    // playerId -> playerInfo
+        this.eliminatedPlayers = []; // 已淘汰玩家ID集合
         
         // 我的信息
         this.myHand = [];           // 我的手牌数组
-        this.myOriginalHp = 2;      // 我的初始生命值
+ 
         
         // 桌面信息
         this.deskCards = [];        // 桌面卡牌信息

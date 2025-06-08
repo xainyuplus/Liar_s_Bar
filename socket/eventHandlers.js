@@ -22,7 +22,7 @@ module.exports = function (socket, io, rooms) {
         playerInfo.id = socket.id; // 以 socket.id 作为 player 的唯一 id
         }
         else{
-           playerInfo.id =socket.id+playerInfo.name; 
+         //  playerInfo.id =socket.id+playerInfo.name; 
         }
         
         room.addPlayer(playerInfo);
@@ -81,7 +81,21 @@ module.exports = function (socket, io, rooms) {
     })
 
     // 处理玩家出牌请求
-    socket.on('play_cards', ({ roomId, cardsInfo }) => {
+    socket.on('play_cards', ({playerId, roomId, cards }) => {
+        const room = rooms.get(roomId);
+        if (!room) {
+            socket.emit('error', '房间不存在');
+            console.log(`Room ${roomId} does not exist`); // 打印房间不存在信息
+            return;
+        }
+        else {
+            room.gameManager.handlePlayCards(playerId,cards); // 处理出牌
+            //io.to(roomId).emit('cards_played', { playerId: playerId, cardsNum: cardsInfo.length }); // 通知所有用户出牌
+            //我在思考，我有必要把这个信息同步给前端吗？
+            //发牌后呢肯定要更新gamestate，主要是牌桌上显示几张牌，然后更新倒计时和当前玩家
+            //这个时候，前端就可以根据这个信息来更新UI了，所以我觉得没必要再发一次
+           // console.log(`Player ${playerId} played cards ${cards} in room ${roomId}`); // 打印玩家出牌信息 
+        }
 
     })
     // 处理质疑请求
@@ -104,6 +118,7 @@ module.exports = function (socket, io, rooms) {
     socket.on('reconnect', ({ roomId }) => {
 
     })
+
 }
 
 

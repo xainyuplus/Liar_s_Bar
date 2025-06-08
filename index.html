@@ -19,7 +19,7 @@
 <script src="js/socket-client.js"></script>
 
 <!-- 数据模块 -->
-<script src="js/game/GameState.js"></script>
+
 <!-- UI组件 -->
 <script src="js/ui/screens/ScreenManner.js"></script>
 <!-- 工具模块 -->
@@ -503,9 +503,145 @@
 
 </script>
 <script>
-   //一会考虑写一个从服务器端随机获得名字与ID与头像的函数
+   //一会考虑写一个从服务器端随机获得名字与ID与头像的函数（已经写好，但是缺足够头像）
+   //接着我会补充一个gameState类，这个类会包含所有的游戏逻辑
+   const expressions = ['😁', '😊', '😎', '🤔', '😏', '🙂'];
+   const clothes = ['👗', '👔', '🦺', '👘', '🥻'];
+   const accessories = ['🎩', '👑', '🎓', '👒', '🧢'];
+   const leftItems = ['💰', '🗝️', '🎭', '🔍', '📜'];
+   const rightItems = ['⚔️', '🛡️', '🏆', '💎', '🎯'];
 
 
+   function updateLobbyPlayerInfo(playerInfo) {
+      const { name, OverLook } = playerInfo;
+      // 更新用户信息
+      const userInfo = document.querySelector('.user-info .user-details h3');
+      userInfo.textContent = name;
+
+      // 更新角色展示区
+      const characterHead = document.querySelector('.character-display .character-head');
+      const characterClothes = document.querySelector('.character-display .character-clothes');
+      const characterAccessory = document.querySelector('.character-display .character-accessory');
+      const characterItemLeft = document.querySelector('.character-display .character-item-left');
+      const characterItemRight = document.querySelector('.character-display .character-item-right');
+      const characterName = document.querySelector('.character-display .character-name');
+
+      characterHead.textContent = expressions[OverLook[0]];
+      characterClothes.textContent = clothes[OverLook[1]];
+      characterAccessory.textContent = accessories[OverLook[2]];
+      characterItemLeft.textContent = leftItems[OverLook[3]];
+      characterItemRight.textContent = rightItems[OverLook[4]];
+      characterName.textContent = name;
+   }
+
+   function updateGameOpponentInfo(opponentInfos) {
+      opponentInfos.forEach((opponentInfo, index) => {
+         const { id, name, OverLook } = opponentInfo;
+         const opponentElement = document.getElementById(`opponent${index + 1}`);
+         if (opponentElement) {
+            const opponentCharacterHead = opponentElement.querySelector('.character-head');
+            const opponentCharacterClothes = opponentElement.querySelector('.character-clothes');
+            const opponentCharacterAccessory = opponentElement.querySelector('.character-accessory');
+            const opponentCharacterItemLeft = opponentElement.querySelector('.character-item-left');
+            const opponentCharacterItemRight = opponentElement.querySelector('.character-item-right');
+            const opponentName = opponentElement.querySelector('.opponent-name');
+
+            opponentCharacterHead.textContent = expressions[OverLook[0]];
+            opponentCharacterClothes.textContent = clothes[OverLook[1]];
+            opponentCharacterAccessory.textContent = accessories[OverLook[2]];
+            opponentCharacterItemLeft.textContent = leftItems[OverLook[3]];
+            opponentCharacterItemRight.textContent = rightItems[OverLook[4]];
+            opponentName.textContent = name;
+            opponentName.dataset.player_id = id; // 添加 data-player_id 属性
+            console.log(opponentName.dataset.player_id);
+         }
+      });
+   }
+   class GameState {
+      constructor() {
+         this.playerInfo = {
+            id: 2233,  //这个无所谓，以后会从服务器端获取
+            name: null,
+            avatar: null,
+            OverLook: [],
+            isHost: false,
+            isRobot: false
+
+         },
+            this.roomInfo = {
+               roomId: null,
+               playerList: [],
+               updateList: function (playerList) {
+                  this.playerList = playerList;
+                  //更新玩家列表
+                  Array.from(document.getElementById('playersDiv').querySelectorAll('#avatarsContainer img')).forEach((img, index) => {
+                     if (index < playerList.length) {
+                        img.src = `./assets/images/avatars/${playerList[index].avatar}`; // 更新头像
+                        img.alt = playerList[index].name; // 更新名字 
+                     }
+                     else {
+                        img.src = `./assets/images/avatars/avatar0.png`; // 更新头像
+                        img.alt = ""; // 更新名字 
+                     }
+                  })
+               }
+
+            },
+            this.gameManager = {
+               gamePhase: 'waiting', // 'waiting', 'playing', 'challenge', 'roulette', 'over'
+               targetCard: null,  // 当前目标牌: 'J', 'Q', 'K'
+               currentPlayerId: null, // 当前出牌玩家ID
+               lastPlayerId: null,    // 上一个出牌的玩家ID
+               roulettePlayerId: null, // 正在轮盘赌的玩家ID
+               roundNumber: 0,      // 当前回合数
+
+               // 所有玩家信息 - 使用Map存储
+               gameInfo: new Map(),    // playerId -> playerInfo
+               eliminatedPlayers: [], // 已淘汰玩家ID集合
+
+               // 我的信息
+               hands: [],           // 我的手牌数组
+
+
+               // 桌面信息
+               //deskCards: [],       // 桌面卡牌信息
+               lastPlayedCount: 0,  // 上次出牌数量
+               lastDeclaredValue: null, // 上次声称的牌值
+               lastActualCards: [],  // 上次实际出的牌（质疑后可见）
+            }
+         initPlayerInfo().then(playerData => {
+            Object.assign(this.playerInfo, playerData);
+            console.log(this.playerInfo);
+            // 初始化完成后，更新玩家信息显示
+            updateLobbyPlayerInfo(this.playerInfo);
+         }).catch(error => {
+            console.error('初始化玩家信息失败:', error);
+         });
+      }
+
+   }
+   //这里应该是从服务器端获取名字与ID与头像的函数 
+   async function initPlayerInfo() {
+      try {
+         // 从服务器端获取名字与ID与头像的函数 
+         const response = await fetch('http://localhost:3000/getRandomIdentity');
+         // 检查响应状态是否正常
+         if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+         }
+         // 将响应数据解析为 JSON 格式
+         const data = await response.json();
+         // 处理返回的数据
+         //返回的数据类型为res.json({ name: randomName, avatar: randomAvatar, OverLook: randomOverLook });
+         console.log(data);
+         return data;
+      } catch (error) {
+         console.error('获取玩家信息失败:', error);
+         return {};
+      }
+   }
+
+   const gameState = new GameState();
 
    // 点击按钮创建房间
    //创建房间的方式是，向后端发送一个请求，仅包括房主id
@@ -515,7 +651,7 @@
    //人数达到4个后点击确定可以开始游戏，也可以点击人机模式，之后进入游戏页面
    class gamemanager {
       constructor() {
-         this.targetCard = "♠K";
+         this.targetCard = "?";
          this.hands = [];
          this.round = 1;
 
@@ -547,11 +683,16 @@
       id: "玩家id",
       name: "玩家名字",
       avatar: "avatar1.png",
-      isHost: true
+      isHost: true,
+      isRobot: false
    };
+   //这里的isHost是有问题的，应该在创建房间后才能赋予房主身份
+   //这里还要补充一个储存形象的数组呢
 
+
+   //下面的创建房间啊之类的方法日后也能放在gameState里？
    function createRoom() {
-      socket.emit('create_room', thisplayerInfo.id); // 发送创建房间请求
+      socket.emit('create_room', gameState.playerInfo.id); // 发送创建房间请求
    }
 
 
@@ -564,7 +705,7 @@
          // 发送加入房间请求
          socket.emit('join_room', {
             roomId,
-            playerInfo: thisplayerInfo
+            playerInfo: gameState.playerInfo
          });
          //注意一个问题，发送信息是 如果直接穿变量，前端后端名字应一致，要么就像这样 playerInfo:thisplayerInfo，后端用playerInfo接收
       }
@@ -572,7 +713,7 @@
    }
 
    function startGame() {
-      if (thisplayerInfo.isHost) {
+      if (gameState.playerInfo.isHost) {
          Swal.fire({
             title: '准备好了吗？',
             text: "人数不足四人时，将以机器人代替空缺玩家",
@@ -585,34 +726,44 @@
 
          }).then((result) => {
             if (result.isConfirmed) {
-               if (roomInfo.playerList.length < 4) {
-                  //如果人数不足4人，将自动添加机器人
-                  for (let i = roomInfo.playerList.length; i < 4; i++) {
-                     robotInfo = {
-                        id: "机器人id",
-                        name: `机器人${i + 1}号`,
-                        avatar: "robot.png",
+               if (gameState.roomInfo.playerList.length < 4) {
+                  // 如果人数不足4人，将自动添加机器人
+                  const robotPromises = [];
+                  for (let i = gameState.roomInfo.playerList.length; i < 4; i++) {
+                     const robotInfo = {
+                        id: gameState.playerInfo.id + "_robot" + i,
+                        name: null,
+                        avatar: null,
+                        OverLook: null,
                         isHost: false,
                         isRobot: true
-                     }
-                     socket.emit('join_room', {
-                        roomId: roomInfo.roomId,
-                        playerInfo: robotInfo
+                     };
+                     const promise = initPlayerInfo().then(playerData => {
+                        Object.assign(robotInfo, playerData);
+                        console.log(robotInfo);
+                        socket.emit('join_room', {
+                           roomId: gameState.roomInfo.roomId,
+                           playerInfo: robotInfo
+                        });
+                     }).catch(error => {
+                        console.error('初始化玩家信息失败:', error);
                      });
-
+                     robotPromises.push(promise);
                   }
 
+                  // 等待所有机器人信息初始化完成
+                  Promise.all(robotPromises).then(() => {
+                     document.getElementById('playersDiv').remove();
+                     // 加载游戏页面
+                     showScreenWithLoading('game', '加载游戏页面中');
+                     socket.emit('start_game', { roomId: gameState.roomInfo.roomId }); // 发送开始游戏请求
+                  });
+               } else {
+                  document.getElementById('playersDiv').remove();
+                  // 加载游戏页面
+                  showScreenWithLoading('game', '加载游戏页面中');
+                  socket.emit('start_game', { roomId: gameState.roomInfo.roomId }); // 发送开始游戏请求
                }
-               document.getElementById('playersDiv').remove();
-               //加载游戏页面
-               showScreenWithLoading('game', '加载游戏页面中');
-
-               socket.emit('start_game', { roomId: roomInfo.roomId }); // 发送开始游戏请求
-
-
-
-
-
             }
             else {
                Swal.fire({
@@ -638,7 +789,7 @@
    }
    function closeDiv() {
       //弹窗:你确认要退出房间吗？
-      if (thisplayerInfo.isHost) {
+      if (gameState.playerInfo.isHost) {
          Swal.fire({
             title: '你确认要退出房间吗？',
             text: "房间会被销毁，其他玩家也会被踢出房间",
@@ -693,7 +844,7 @@
          startGame(); // 调用开始游戏函数
       });
       //如果玩家非房主的话，隐藏开始游戏按钮
-      if (!thisplayerInfo.isHost) {
+      if (!gameState.playerInfo.isHost) {
          players_Div.querySelector('#startButton').style.display = 'none';
       }
    }
@@ -706,21 +857,28 @@
 <script>
    socket.on('room_created', (roomId) => {
       console.log(`Room created with ID: ${roomId}`); // 接收创建成功的消息 
+      gameState.playerInfo.isHost = true; //更新房主身份
       localStorage.setItem('roomId', roomId); //把房间ID保存到本地存储中
       socket.emit('join_room', {
          roomId,
-         playerInfo: thisplayerInfo
+         playerInfo: gameState.playerInfo
       }); // 发送加入房间请求
       console.log("发送了加入房间请求");
    })
 
    socket.on('room_joined', (data) => {
+      //如果id字段中有_robot
+      if (String(data.id).includes('_robot')) {
 
-      console.log(`Joined room with ID: ${data.roomId}`); // 接收加入成功的消息
-      localStorage.setItem('roomId', data.roomId); //把房间ID保存到本地存储中
-      roomInfo.roomId = data.roomId; //更新房间ID
-      thisplayerInfo.id = data.id; //更新玩家ID
-      intiDiv(roomInfo.roomId); //初始化房间加入页面
+      }
+      else {
+         console.log(`Joined room with ID: ${data.roomId}`); // 接收加入成功的消息
+         localStorage.setItem('roomId', data.roomId); //把房间ID保存到本地存储中
+         gameState.roomInfo.roomId = data.roomId; //更新房间ID
+         gameState.playerInfo.id = data.id; //更新玩家ID
+         intiDiv(gameState.roomInfo.roomId); //初始化房间加入页面
+      }
+
    })
 
    //接收广播的玩家加入事件，用于同步更新玩家加入界面，我认为这里应该直接发过来玩家列表数组
@@ -744,7 +902,7 @@
       }
 
       //console.log(playerlist);
-      roomInfo.updateList(playerlist); //更新玩家列表
+      gameState.roomInfo.updateList(playerlist); //更新玩家列表
    })
 
    socket.on('error', (errorInfo) => {
@@ -768,25 +926,28 @@
 
       })
       console.log("游戏开始");
+
+      const opponentInfos = gameState.roomInfo.playerList.filter(player => player.id !== gameState.playerInfo.id);; //获取对手信息
+      updateGameOpponentInfo(opponentInfos);
    });
 
    socket.on('round_started', (data) => {
       //需要一个数据类型去记录目标牌和手牌了
-      roomInfo.gamemanager.targetCard = data.targetCard; //更新目标牌
+      gameState.gameManager.targetCard = data.targetCard; //更新目标牌
       set_target(data.targetCard); //更新目标牌
-      console.log("目标牌：" + roomInfo.gamemanager.targetCard);
-      showGameEventMessage("目标牌：" + roomInfo.gamemanager.targetCard);
-      socket.emit('deal_cards', { playerId: thisplayerInfo.id, roomId: roomInfo.roomId }); //发送发牌请求
+      console.log("目标牌：" + gameState.gameManager.targetCard);
+      showGameEventMessage("目标牌：" + gameState.gameManager.targetCard);
+      socket.emit('deal_cards', { playerId: gameState.playerInfo.id, roomId: gameState.roomInfo.roomId }); //发送发牌请求
       console.log("发送了发牌请求");
       showGameEventMessage("发送了发牌请求");
 
    })
    socket.on('cards_dealt', (data) => {
-      roomInfo.gamemanager.hands = data; //更新已出的牌
+      gameState.gameManager.hands = data; //更新已出的牌
       console.log(data);
       console.log("收到了发牌信息");
       showGameEventMessage("收到了发牌信息");
-      console.log(roomInfo.gamemanager.hands);
+      console.log(gameState.gameManager.hands);
       setTimeout(() => { if (dealCards()) setTimeout(drawCard, 1300) }, 500);
       //发牌动画
    });
@@ -812,10 +973,19 @@
          }, delay);
       }
    });
-   socket.on('card_played', (data) => {
-      console.log("收到了出牌信息");
-      showGameEventMessage("收到了出牌信息");
-      console.log(data); 
+
+   socket.on('sync_game_state', (state) => {
+      Object.assign(gameState.gameManager, state);
+
+      // 把 players 更新进 Map 格式
+      const map = new Map();
+      for (let p of state.players) {
+         map.set(p.id, p);
+      }
+      gameState.gameManager.players = map;
+      showGameEventMessage("收到了同步信息");
+      // 根据 phase 控制 UI 显示
+      updateUI();
    });
    //接下来首先把game界面自身的一些测试函数给去掉
    //然后呢，我们就去写发牌，取牌，出牌等等的前后端逻辑，确保能玩
@@ -831,7 +1001,7 @@
    //const play1 = ["A", "Q", "K", "joker", "joker"];（均已丧失作用）
    let selectedCards = [];
    let timerInterval;
-   let currentTime ;
+   let currentTime;
 
    //const deck = initDeck();
    //initdeck已经删掉了，没一点用
@@ -1105,7 +1275,7 @@
       playedCards.innerHTML = '';
       playedCards.style.visibility = 'hidden';
       const handCards = document.getElementById('handCards');
-      roomInfo.gamemanager.hands.forEach(({ id: cardId, value: cardValue }) => {
+      gameState.gameManager.hands.forEach(({ id: cardId, value: cardValue }) => {
          const cardContainer = document.createElement('div');
          cardContainer.className = 'hand-card';
          cardContainer.dataset.value = cardValue;
@@ -1137,6 +1307,14 @@
 
    // 处理卡牌点击事件
    function handleCardClick(event) {
+      const currentPlayerId = gameState.gameManager.currentPlayerId;
+      const myPlayerId = gameState.playerInfo.id;
+      const isMyTurn = currentPlayerId === myPlayerId;
+
+      // 若不是自己回合，不处理点击事件
+      if (!isMyTurn) {
+         return;
+      }
       const card = event.currentTarget;
       const isSelected = card.classList.contains('selected');
 
@@ -1175,7 +1353,7 @@
          playSelectedButton.classList.add('opacity-50', 'cursor-not-allowed');
       }
    }
-   // 播放卡牌动画(哦原来这个就是出牌的函数)
+   // 播放卡牌动画(哦原来这个就是出牌的函数),把socket.emit放在这里了
    function playSelectedCards() {
       if (selectedCards.length === 0) return;
       // 获取窗口尺寸
@@ -1200,19 +1378,20 @@
             y: playedCardsArea.offsetHeight - 450
          });
       }
-          // 提取选中卡牌的 id 和 value
+      // 提取选中卡牌的 id 和 value
       const selectedCardData = selectedCards.map(card => ({
          id: card.dataset.id, // 假设元素有 data-id 属性
          value: card.dataset.value
       }));
 
       // 发送选中卡牌数据到后端
-      socket.emit('player_cards', {
-         playerId: thisplayerInfo.id,
-         roomId: roomInfo.roomId,
+      socket.emit('play_cards', {
+         playerId: gameState.playerInfo.id,
+         roomId: gameState.roomInfo.roomId,
          cards: selectedCardData
       });
       showGameEventMessage("发送了出牌信息");
+      console.log(selectedCardData);
 
 
       // 保存原始卡牌数据并开始动画
@@ -1345,7 +1524,7 @@
    function easeOutCubic(t) {
       return 1 - Math.pow(1 - t, 3);
    }
-    // 开始倒计时的函数
+   // 开始倒计时的函数
    function startCountdown(timerElement) {
       // 重置时间
       currentTime = 15;
@@ -1538,6 +1717,47 @@
       eventMessagesDiv.innerHTML = '';
    }
 
+   function updateUI() {
+      //会根据gameState来更新UI 
+      const playBtn = document.getElementById('playBtn');
+      const challengeBtn = document.getElementById('challengeBtn');
+      const currentPlayerId = gameState.gameManager.currentPlayerId;
+      const myPlayerId = gameState.playerInfo.id;
+      //好神奇，为什么我的ID变成robot了？
+      //我想我知道了，因为robot加入房间也会发送room_joined消息，所以会更新id
+      showGameEventMessage(`当前玩家ID:${currentPlayerId}`);
+      // 判断是否为自己的回合
+      const isMyTurn = currentPlayerId === myPlayerId;
+
+      // 根据是否为自己的回合来启用或禁用按钮
+      playBtn.disabled = !isMyTurn;
+      challengeBtn.disabled = !isMyTurn;
+
+      // 更新按钮的样式，使其在禁用状态下有视觉反馈
+      if (!isMyTurn) {
+         playBtn.classList.add('opacity-50', 'cursor-not-allowed');
+         challengeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+      } else {
+         playBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+         challengeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+         showGameEventMessage("你的回合开始了");
+      }
+      const allOpponentElements = document.querySelectorAll('.opponent');
+
+      allOpponentElements.forEach(opponentElement => {
+         const opponentName = opponentElement.querySelector('.opponent-name');
+         const playerId = opponentName?.dataset.player_id;
+         if (playerId === String(currentPlayerId)) {
+            opponentElement.classList.add('active');
+            console.log(`${opponentName.textContent}的回合开始了`);
+         } else {
+            opponentElement.classList.remove('active');
+         }
+      });
+   }
+
+  
 
    loadImages();
 

@@ -10,11 +10,9 @@ class Player {
     this.connected = true;        // 是否连接中
     this.lastAction = Date.now(); // 最后操作时间
     this.isRobot =false;         // 是否为机器人
+    this.bullets=6; // 子弹数量
   }
 
-  addCard(card) {
-    this.hand.push(card);
-  }
 
   removeCard(cardId) {
     this.hand = this.hand.filter(c => c.id !== cardId);
@@ -48,6 +46,7 @@ class Player {
       avatar: this.avatar,
       hand: this.hand,
       isHost: this.isHost,
+      isRobot:this.isRobot,
       isAlive: this.isAlive,
       connected: this.connected,
       lastAction: this.lastAction,
