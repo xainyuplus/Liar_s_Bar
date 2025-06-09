@@ -11,6 +11,7 @@ class Player {
     this.lastAction = Date.now(); // 最后操作时间
     this.isRobot =false;         // 是否为机器人
     this.bullets=6; // 子弹数量
+    this.deadNum=Math.floor(Math.random() * 6)+1; // 会死亡的子弹数
   }
 
 

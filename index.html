@@ -13,68 +13,7 @@
    <link rel="stylesheet" href="./CSS/main.css">
    <!-- 这几个CSS其实是有冲突的，要想办法消除一下，现在算了-->
    <style>
-      .player-self {
-         position: fixed;
-         /* 使用固定定位 */
-         left: 20px;
-         /* 距离屏幕左侧 20px */
-         bottom: 20px;
-         /* 距离屏幕底部 20px */
-         display: flex;
-         /* 使用 flex 布局 */
-         flex-direction: column;
-         /* 垂直排列子元素 */
-         align-items: center;
-         /* 子元素水平居中 */
-         background-color: rgba(240, 240, 240, 0.6);
-         ;
-         /* 设置半透明背景 */
-         padding: 15px;
-         /* 添加内边距 */
-         border-radius: 10px;
-         /* 圆角边框 */
-         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-         /* 添加阴影 */
-         z-index: 10;
-         /* 设置 z-index，确保显示在其他元素之上 */
-      }
 
-      .player-self .player-character {
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-         margin-bottom: 10px;
-         /* 与下方信息区域保持间距 */
-      }
-
-      .player-self .player-info {
-         text-align: center;
-         margin-bottom: 10px;
-         /* 与下方子弹计数器保持间距 */
-      }
-
-      .player-self .bullet-counter {
-         display: flex;
-         align-items: center;
-      }
-
-      .player-self .bullet-display {
-         display: flex;
-         margin-left: 5px;
-         /* 与枪图标保持间距 */
-      }
-
-      .player-self .bullet {
-         display: flex;
-         margin-left: 5px;
-         /* 与枪图标保持间距 */
-
-      }
-
-      .player-self .bullet.used {
-         background-color: #ccc;
-         /* 已使用子弹颜色 */
-      }
    </style>
 </head>
 <!-- 加载所有JavaScript模块 -->
@@ -282,7 +221,7 @@
          <!-- 倒计时器 -->
          <div class="timer-area">
             <!-- 倒计时显示区域，初始值为 30 -->
-            <div class="timer" id="timer">30</div>
+            <div class="timer" id="timer">?</div>
          </div>
 
          <!-- 目标牌区域 -->
@@ -506,12 +445,7 @@
          </div>
       </div>
 
-      <!-- 游戏状态提示 ,这玩意以后肯定要删掉，仅供调试-->
-      <div class="game-event-info" id="gameEventInfo">
-         <h3>游戏事件信息</h3>
-         <div id="eventMessages"></div>
-         <button class="action-btn" onclick="clearEventMessages()">清除信息</button>
-      </div>
+
 
    </div>
 </body>
@@ -568,6 +502,12 @@
    async function showScreenWithLoading(screenName, loadingText) {
       // 1. 显示加载动画
       await loadingTransition.show(loadingText || '切换页面中');
+
+      // 2. 模拟一些处理时间（实际项目中可能是数据加载）
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 1. 显示加载动画
+      await loadingTransition.show(loadingText || '加载角色形象中');
 
       // 2. 模拟一些处理时间（实际项目中可能是数据加载）
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -855,21 +795,21 @@
                      document.getElementById('playersDiv').remove();
                      // 加载游戏页面
                      showScreenWithLoading('game', '加载游戏页面中');
-                     
+
 
                      socket.emit('start_game', { roomId: gameState.roomInfo.roomId }); // 发送开始游戏请求
                   });
                } else {
                   document.getElementById('playersDiv').remove();
-                  
+
                   socket.emit('start_game', { roomId: gameState.roomInfo.roomId }); // 发送开始游戏请求
                   // 加载游戏页面
                   showScreenWithLoading('game', '加载游戏页面中');
                   //延迟一秒后
                   setTimeout(() => {
                      // 加载游戏页面
-                     showScreenWithLoading('game', '更新角色形象中'); 
-                  },1000);
+                     showScreenWithLoading('game', '更新角色形象中');
+                  }, 1000);
                }
             }
             else {
@@ -1045,8 +985,17 @@
       console.log("目标牌：" + gameState.gameManager.targetCard);
       showGameEventMessage("目标牌：" + gameState.gameManager.targetCard);
       socket.emit('deal_cards', { playerId: gameState.playerInfo.id, roomId: gameState.roomInfo.roomId }); //发送发牌请求
-      console.log("发送了发牌请求");
-      showGameEventMessage("发送了发牌请求");
+      Swal.fire({
+         position: 'center',
+         title: '开始新回合',
+         text: `当前目标牌为${data.targetCard}`,
+         icon: 'info',
+         showConfirmButton: false,
+         timer: 800
+      })
+
+      const handCards = document.getElementById('handCards');
+      handCards.innerHTML = ''; // 清空手牌显示区域
 
    })
    socket.on('cards_dealt', (data) => {
@@ -1059,7 +1008,7 @@
       //发牌动画
    });
    socket.on('start_timer', (timestamp) => {
-      showGameEventMessage("开始倒计时");
+
       const timerElement = document.getElementById('timer');
       if (!timerElement) return;
 
@@ -1094,23 +1043,149 @@
       // 根据 phase 控制 UI 显示
       updateUI();
    });
-   
+
    socket.on('cards_played', (data) => {
-      if(data.playerId===gameState.playerInfo.id){
-        //是自己出的牌，不需要动画 
+      if (data.playerId === gameState.playerInfo.id) {
+         //是自己出的牌，不需要动画 
       }
-      else{
+      else {
          playOpponentCards(data.playerId, data.cardsNum);
+         Swal.fire({
+            position: 'top',
+            title: `${gameState.gameManager.players.get(data.playerId).name} 出了 ${data.cardsNum} 张牌`,
+            icon: 'info',
+            showConfirmButton: false,
+            timer: 800
+         })
       }
    });
-socket.on('challenge_result', (data) => {
-   showGameEventMessage("收到了质疑结果");}
-   //首先触发质疑动画
-   //接着触发翻牌动画
-   //接着触发成功/失败动画
-)
+   socket.on('challenge_result', (data) => {
+      //首先触发质疑动画
+      //接着触发翻牌动画
+      //接着触发成功/失败动画
+      console.log(data);
+      Swal.fire({
+         position: 'top',
+         title: `${gameState.gameManager.players.get(data.challengerId).name} 发起了质疑 `,
+         icon: 'info',
+         showConfirmButton: false,
+         timer: 800
+      })
 
 
+      // 延迟一段时间后开始翻牌
+      setTimeout(() => {
+         flipCardsOnTable(data.lastPlayedCards, () => {
+            // 翻牌完成后触发成功/失败信息
+            //先延迟两秒
+            setTimeout(() => {
+               if (data.result) {
+                  Swal.fire({
+                     position: 'top',
+                     title: `质疑成功`,
+                     text: `${gameState.gameManager.players.get(data.lastPlayerId).name} 将进入轮盘赌`,
+                     icon: 'success',
+                     showConfirmButton: false,
+                     timer: 800
+                  })
+               }
+               else {
+                  Swal.fire({
+                     position: 'top',
+                     title: `质疑失败`,
+                     text: `${gameState.gameManager.players.get(data.challengerId).name} 将进入轮盘赌`,
+                     icon: 'error',
+                     showConfirmButton: false,
+                     timer: 800
+                  })
+               }
+            }, 1500)
+
+         });
+      }, 2000);
+
+
+   }
+
+   )
+
+   socket.on('roulette_result', (data) => {
+      // 首先触发轮盘赌动画
+      gun(data.playerId, data.result);
+
+      // 接着是 swal + 死亡/存活
+      const playerName = gameState.gameManager.players.get(data.playerId)?.name || gameState.playerInfo.name;
+      setTimeout(() => {
+         if (data.result) {
+            Swal.fire({
+               position: 'top',
+               title: `玩家 ${playerName} 不幸淘汰`,
+               icon: 'error',
+               showConfirmButton: false,
+               timer: 1500
+            });
+         } else {
+            Swal.fire({
+               position: 'top',
+               title: `玩家 ${playerName} 逃过一劫`,
+               icon: 'success',
+               showConfirmButton: false,
+               timer: 1500
+            });
+         }
+      },2000);
+
+
+      //然后其实就是下一轮了，更新UI会放在那里
+   });
+   socket.on('game_over', (data) => {
+      // 显示游戏结束信息
+      Swal.fire({
+         position: 'top',
+         title: '游戏结束',
+         text: `恭喜玩家 ${data.name} 获胜！`,
+         icon: 'success',
+         showConfirmButton: false,
+         timer: 2000
+      }); 
+   })
+   //进行开枪
+   function gun(playerId, result) {
+      let targetElement;
+      if (playerId === gameState.playerInfo.id) {
+         // 如果是玩家自己
+         targetElement = document.getElementById('playerSelf');
+      } else {
+         // 如果是对手
+         const opponentNameElement = document.querySelector(`.opponent-name[data-player_id="${playerId}"]`);
+         if (!opponentNameElement) {
+            console.error(`未找到玩家 ID 为 ${playerId} 的对手元素`);
+            return;
+         }
+         targetElement = opponentNameElement.closest('.opponent');
+      }
+
+      const right = targetElement.querySelector('.character-item-right');
+      const head = targetElement.querySelector('.character-head');
+      const rightoriginal = right.textContent;
+      const headoriginal = head.textContent;
+
+      right.textContent = '🔫';
+      head.textContent = '😱';
+      right.classList.add('gun-animation');
+
+      // 动画结束后根据结果改变头部表情
+      right.addEventListener('animationend', function animationEndHandler() {
+         if (result) {
+            head.textContent = '💀';
+         } else {
+            head.textContent = headoriginal;
+            right.textContent = rightoriginal;
+         }
+         right.classList.remove('gun-animation');
+         right.removeEventListener('animationend', animationEndHandler);
+      });
+   }
 
    //接下来首先把game界面自身的一些测试函数给去掉
    //然后呢，我们就去写发牌，取牌，出牌等等的前后端逻辑，确保能玩
@@ -1118,6 +1193,8 @@ socket.on('challenge_result', (data) => {
    //然后呢，适当把代码拆分一下
 </script>
 <script>
+
+
    //以下是游戏界面的初始化和动画的代码，我认为肯定存在大量冗余，以后改
    //而且有些函数的逻辑本该属于后端，再说吧
    toggleChat();
@@ -1761,87 +1838,30 @@ socket.on('challenge_result', (data) => {
 
    //这是之前的版本，要改掉，拆分成1.质疑动画2.翻牌动画3.成功/失败动画
    //翻转牌，并通过判断是否渲染开枪动画
+   //现在就退化成只发信息吧
    function challenge() {
 
-      function checkcard() {
-         const playedCards = document.getElementById('playedCards');
-         const cardElements = playedCards.querySelectorAll('.played-card canvas');
-
-         // 逐个翻转卡牌
-         cardElements.forEach((canvas, index) => {
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
-
-            // 延迟执行，使卡牌逐个翻转
-            setTimeout(() => {
-               // 选择对应的卡牌正面图像;
-               flipCard(ctx, width, height, 'A');//卡牌正面直接设置为A，需要从玩法中的桌子中牌来重新设置
-            }, index * 200); // 每张卡牌间隔200ms
-         });
-         if (1) return cardElements.length;//加入判断逻辑，质疑是否成功
-      }
-      //进行开枪测试
-      function gun() {
-
-
-         var buffer = document.getElementById('opponent2')
-         var right = buffer.querySelector('.character-item-right')
-         var head = buffer.querySelector('.character-head')
-         const rightoriginal = right.textContent
-         const headoriginal = head.textContent
-         right.textContent = '🔫'
-         head.textContent = '😱'
-         right.classList.add('gun-animation');
-         // 动画结束后改变头部为骷髅
-         right.addEventListener('animationend', function animationEndHandler() {
-            const isDead = Math.random() > 0.833;
-            if (isDead) {
-               head.textContent = '💀';
-               right.textContent = '⚰️';
-            }
-            else {
-               head.textContent = headoriginal
-               right.textContent = rightoriginal
-            }
-            right.classList.remove('gun-animation');
-            right.removeEventListener('animationend', animationEndHandler);
-         });
-      }
-
-      const isChallengeSuccess = checkcard();
-      if (isChallengeSuccess != 0) {
-         setTimeout(gun, (isChallengeSuccess + 1) * 200);
-         setTimeout(() => {
-            const playedCards = document.getElementById('playedCards');
-            playedCards.innerHTML = '';
-            playedCards.style.visibility = 'hidden';
-         }, (isChallengeSuccess + 2) * 200);
-      }
-      else {
-         setTimeout(() => {
-            const playedCards = document.getElementById('playedCards');
-            playedCards.innerHTML = '';
-            playedCards.style.visibility = 'hidden';
-         }, (isChallengeSuccess + 1) * 200);
-      }
-
+      // 发送质疑消息
+      socket.emit('challenge', {
+         playerId: gameState.playerInfo.id,
+         roomId: gameState.roomInfo.roomId,
+         //targetPlayerId: gameState.gameManager.lastPlayerId // 假设 lastPlayerId 存储了上一个玩家的 ID
+      });
    }
 
-   // 显示游戏事件信息的函数
+   // 显示游戏事件信息的函数(这个函数给废掉吧，我会用swal来替代它的)
    function showGameEventMessage(message) {
-      const eventMessagesDiv = document.getElementById('eventMessages');
-      const newMessage = document.createElement('p');
-      newMessage.textContent = message;
-      eventMessagesDiv.appendChild(newMessage);
-      // 自动滚动到最新消息
-      eventMessagesDiv.scrollTop = eventMessagesDiv.scrollHeight;
+      /*   const eventMessagesDiv = document.getElementById('eventMessages');
+        const newMessage = document.createElement('p');
+        newMessage.textContent = message;
+        eventMessagesDiv.appendChild(newMessage);
+        // 自动滚动到最新消息
+        eventMessagesDiv.scrollTop = eventMessagesDiv.scrollHeight; */
    }
 
    // 清除游戏事件信息的函数
    function clearEventMessages() {
-      const eventMessagesDiv = document.getElementById('eventMessages');
-      eventMessagesDiv.innerHTML = '';
+      /* 已经删掉了 */
    }
 
    function updateUI() {
@@ -1861,6 +1881,12 @@ socket.on('challenge_result', (data) => {
       // 根据是否为自己的回合来启用或禁用按钮
       playBtn.disabled = !isMyTurn;
       challengeBtn.disabled = !isMyTurn;
+
+      // 当 lastPlayID 为 null 时，禁用质疑按钮
+      if (gameState.gameManager.lastPlayerId === null) {
+         challengeBtn.disabled = true;
+         challengeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
 
       // 更新按钮的样式，使其在禁用状态下有视觉反馈
       if (!isMyTurn) {
@@ -1917,7 +1943,7 @@ socket.on('challenge_result', (data) => {
             playerCards.textContent = `${gameState.gameManager.players.get(gameState.playerInfo.id).handCount} 张牌`;
          }
          else {
-            console.log(`未找到玩家 ${playerId} 的信息`); 
+            console.log(`未找到玩家 ${playerId} 的信息`);
          }
 
          // 更新玩家自身剩余子弹数
@@ -1927,129 +1953,157 @@ socket.on('challenge_result', (data) => {
          });
       }
       else {
-         console.log(`未找到玩家 ${playerId} 的信息`); 
+         console.log(`未找到玩家 ${playerId} 的信息`);
       }
    }
 
- // 处理其他玩家出牌动画的函数
- // 处理对手出牌动画的函数
+   // 处理其他玩家出牌动画的函数
+   // 处理对手出牌动画的函数
 
-// 处理对手出牌动画的函数
-// 处理对手出牌动画的函数
-function playOpponentCards(playerId, cardsCount) {
-    if (cardsCount <= 0) return;
-    
-    // 1. 找到对手元素
-    const opponentElement = document.querySelector(`.opponent-name[data-player_id="${playerId}"]`);
-    if (!opponentElement) {
-        console.error(`找不到玩家 ${playerId} 的元素`);
-        return;
-    }
-    
-    const opponentContainer = opponentElement.closest('.opponent');
-    const playedCardsArea = document.getElementById('playedCards');
-    
-    // 2. 清除桌面现有卡牌
-    if (playedCardsArea.querySelector('p')) {
-        playedCardsArea.innerHTML = '';
-    }
-    
-    // 3. 计算目标位置（桌面中央的卡牌排列位置）
-    const cardWidth = 70;
-    const gap = 8;
-    const totalWidth = cardsCount * cardWidth + (cardsCount - 1) * gap;
-    const startX = (playedCardsArea.offsetWidth - totalWidth) / 2;
-    
-    const targetPositions = [];
-    for (let i = 0; i < cardsCount; i++) {
-        targetPositions.push({
+   // 处理对手出牌动画的函数
+   // 处理对手出牌动画的函数
+   function playOpponentCards(playerId, cardsCount) {
+      if (cardsCount <= 0) return;
+
+      // 1. 找到对手元素
+      const opponentElement = document.querySelector(`.opponent-name[data-player_id="${playerId}"]`);
+      if (!opponentElement) {
+         console.error(`找不到玩家 ${playerId} 的元素`);
+         return;
+      }
+
+      const opponentContainer = opponentElement.closest('.opponent');
+      const playedCardsArea = document.getElementById('playedCards');
+
+      // 2. 清除桌面现有卡牌
+      if (playedCardsArea.querySelector('p')) {
+         playedCardsArea.innerHTML = '';
+      }
+
+      // 3. 计算目标位置（桌面中央的卡牌排列位置）
+      const cardWidth = 70;
+      const gap = 8;
+      const totalWidth = cardsCount * cardWidth + (cardsCount - 1) * gap;
+      const startX = (playedCardsArea.offsetWidth - totalWidth) / 2;
+
+      const targetPositions = [];
+      for (let i = 0; i < cardsCount; i++) {
+         targetPositions.push({
             x: startX + i * (cardWidth + gap),
             y: playedCardsArea.offsetHeight - 150
-        });
-    }
-    
-    // 4. 计算对手位置相对于桌面的坐标
-    const opponentRect = opponentContainer.getBoundingClientRect();
-    const playedCardsRect = playedCardsArea.getBoundingClientRect();
-    const startX_relative = opponentRect.left - playedCardsRect.left + opponentRect.width / 2;
-    const startY_relative = opponentRect.top - playedCardsRect.top + opponentRect.height / 2;
-    
-    // 5. 创建临时卡牌并设置起始位置
-    const tempCards = [];
-    for (let i = 0; i < cardsCount; i++) {
-        // 创建卡牌元素
-        const cardContainer = document.createElement('div');
-        cardContainer.className = 'hand-card';
-        cardContainer.style.position = 'absolute';
-        cardContainer.style.left = `${startX_relative}px`;
-        cardContainer.style.top = `${startY_relative}px`;
-        cardContainer.style.zIndex = '10';
-        
-        // 创建卡牌画布
-        const canvas = document.createElement('canvas');
-        canvas.width = 70;
-        canvas.height = 100;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(cardImages['back'], 0, 0, canvas.width, canvas.height);
-        
-        cardContainer.appendChild(canvas);
-        playedCardsArea.appendChild(cardContainer);
-        tempCards.push(cardContainer);
-    }
-    
-    // 6. 执行动画
-    animateOpponentCards(tempCards, targetPositions, () => {
-        // 动画完成后的回调
-        tempCards.forEach(card => card.remove());
-        
-        // 在桌面显示最终的卡牌背面
-        playedCardsArea.innerHTML = '';
-        for (let i = 0; i < cardsCount; i++) {
-            initDeckCanvas();
-        }
-        playedCardsArea.style.visibility = 'visible';
-    });
-}
+         });
+      }
 
-// 对手卡牌动画函数
-function animateOpponentCards(cards, targetPositions, callback) {
-    const duration = 800;
-    const startTime = performance.now();
-    
-    // 获取起始位置
-    const startPositions = cards.map(card => ({
-        x: parseFloat(card.style.left),
-        y: parseFloat(card.style.top)
-    }));
-    
-    function animate(currentTime) {
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / duration, 1);
-        const easeProgress = easeOutCubic(progress);
-        
-        cards.forEach((card, index) => {
+      // 4. 计算对手位置相对于桌面的坐标
+      const opponentRect = opponentContainer.getBoundingClientRect();
+      const playedCardsRect = playedCardsArea.getBoundingClientRect();
+      const startX_relative = opponentRect.left - playedCardsRect.left + opponentRect.width / 2;
+      const startY_relative = opponentRect.top - playedCardsRect.top + opponentRect.height / 2;
+
+      // 5. 创建临时卡牌并设置起始位置
+      const tempCards = [];
+      for (let i = 0; i < cardsCount; i++) {
+         // 创建卡牌元素
+         const cardContainer = document.createElement('div');
+         cardContainer.className = 'hand-card';
+         cardContainer.style.position = 'absolute';
+         cardContainer.style.left = `${startX_relative}px`;
+         cardContainer.style.top = `${startY_relative}px`;
+         cardContainer.style.zIndex = '10';
+
+         // 创建卡牌画布
+         const canvas = document.createElement('canvas');
+         canvas.width = 70;
+         canvas.height = 100;
+         const ctx = canvas.getContext('2d');
+         ctx.drawImage(cardImages['back'], 0, 0, canvas.width, canvas.height);
+
+         cardContainer.appendChild(canvas);
+         playedCardsArea.appendChild(cardContainer);
+         tempCards.push(cardContainer);
+      }
+
+      // 6. 执行动画
+      animateOpponentCards(tempCards, targetPositions, () => {
+         // 动画完成后的回调
+         tempCards.forEach(card => card.remove());
+
+         // 在桌面显示最终的卡牌背面
+         playedCardsArea.innerHTML = '';
+         for (let i = 0; i < cardsCount; i++) {
+            initDeckCanvas();
+         }
+         playedCardsArea.style.visibility = 'visible';
+      });
+   }
+
+   // 对手卡牌动画函数
+   function animateOpponentCards(cards, targetPositions, callback) {
+      const duration = 800;
+      const startTime = performance.now();
+
+      // 获取起始位置
+      const startPositions = cards.map(card => ({
+         x: parseFloat(card.style.left),
+         y: parseFloat(card.style.top)
+      }));
+
+      function animate(currentTime) {
+         const elapsedTime = currentTime - startTime;
+         const progress = Math.min(elapsedTime / duration, 1);
+         const easeProgress = easeOutCubic(progress);
+
+         cards.forEach((card, index) => {
             const startPos = startPositions[index];
             const targetPos = targetPositions[index];
-            
+
             // 计算当前位置
             const currentX = startPos.x + (targetPos.x - startPos.x) * easeProgress;
             const currentY = startPos.y + (targetPos.y - startPos.y) * easeProgress;
-            
+
             // 更新卡牌位置
             card.style.left = `${currentX}px`;
             card.style.top = `${currentY}px`;
-        });
-        
-        if (progress < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            callback();
-        }
-    }
-    
-    requestAnimationFrame(animate);
-}
+         });
 
+         if (progress < 1) {
+            requestAnimationFrame(animate);
+         } else {
+            callback();
+         }
+      }
+
+      requestAnimationFrame(animate);
+   }
+
+   //质疑的翻牌函数
+   function flipCardsOnTable(cards, callback) {
+      const playedCardsArea = document.getElementById('playedCards');
+      const cardElements = playedCardsArea.querySelectorAll('.played-card canvas');
+
+      // 确保卡牌数量匹配
+      if (cardElements.length !== cards.length) {
+         console.error('卡牌数量不匹配');
+         return;
+      }
+
+      // 逐个翻转卡牌
+      cardElements.forEach((canvas, index) => {
+         const ctx = canvas.getContext('2d');
+         const width = canvas.width;
+         const height = canvas.height;
+         const cardValue = cards[index].value;
+
+         // 延迟执行，使卡牌逐个翻转
+         setTimeout(() => {
+            flipCard(ctx, width, height, cardValue);
+            // 最后一张牌翻转完成后执行回调
+            if (index === cards.length - 1) {
+               callback();
+            }
+         }, index * 500); // 每张卡牌间隔200ms
+      });
+   }
    loadImages();
 
 </script>

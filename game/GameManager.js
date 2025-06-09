@@ -2,7 +2,7 @@
 class GameManager {
   constructor(room) {
     this.room = room;                // 房间引用
-    this.currentPlayerIndex = -1;     // 当前玩家索引
+    this.currentPlayerIndex = null;     // 当前玩家索引
     this.targetCard = null;          // 当前目标牌
     this.lastPlayedCards = [];       // 上一次出的牌
     this.lastPlayerId = null;        // 上一个出牌的玩家ID
@@ -16,6 +16,20 @@ class GameManager {
 
   startRound() {
     // 开始新一轮，一轮指的是至少进行一次轮盘赌的那种一轮，每一轮只有一个目标牌
+    if(this.eliminatedPlayers.length === 3){
+      const alivePlayers = Array.from(this.room.players.values())
+        .filter(player => !this.eliminatedPlayers.includes(player.id))
+        .map(player => ({
+          id: player.id,
+          name: player.name,
+          avatar: player.avatar
+        }));
+
+      // 发送游戏结束事件和存活玩家信息
+      this.room.io.to(this.room.id).emit('game_over', { alivePlayers });
+      return; 
+    }
+    else{
     this.room.deck = this.initDeck();
     this.setRandomTargetCard();
     this.room.phase = 'PLAYING';
@@ -25,14 +39,41 @@ class GameManager {
     //不过建议还是拆分一下，用state更新这个函数
     //前端接收到这条信息后，再开始发牌动画，并获取手牌信息
     this.dealCards();//发牌
-    this.nextTurn(3000);//开始第一轮
+    this.firstTurn(3000);//开始第一轮
+    }
+
+  }
+
+
+  firstTurn(delay_time=2000) {
+    console.log("first turn");
+    if( this.currentPlayerIndex === null){
+      this.currentPlayerIndex=-1;
+    }
+    this.currentPlayerIndex = this.getNextPlayerIndex();
+    this.lastPlayerId = null; // 上一个出牌的玩家ID
+    this.currentPlayerInfo = this.room.playersList[this.currentPlayerIndex];
+    //this.room.io.to(this.room.id).emit('first_turn', { playerId: this.currentPlayerInfo.id });//通知第一个玩家
+    this.round = 1; // 第一轮
+    // 设定新一轮的计时器（2秒后开始）
+    const startTime = Date.now() + delay_time;
+    this.room.io.to(this.room.id).emit('start_timer', startTime); 
+    this.syncGameState();//同步游戏状态
+      if(this.currentPlayerInfo.isRobot){
+    setTimeout(() => {
+    //机器人出牌专门写一个函数吧
+    this.handleRobotPlayCards();//机器人出牌
+      
+    },3000)
+  }
   }
   // 切换到下一个玩家(要想好怎么写)
   //感觉现在的轮次上还太乱
   nextTurn(delay_time=2000) {
+    console.log("next turn");
+  this.lastPlayerId = this.currentPlayerInfo.id;
   this.currentPlayerIndex = this.getNextPlayerIndex();
   this.currentPlayerInfo = this.room.playersList[this.currentPlayerIndex];
-  this.lastPlayerId = this.currentPlayerInfo.id;
     console.log("它的回合"+this.currentPlayerInfo.name+"他的id是"+this.currentPlayerInfo.id);
   // 更新轮数（建议只在一个完整轮后更新）
   this.round += 1;
@@ -115,17 +156,44 @@ getNextPlayerIndex() {
       // 如果存在其他牌，质疑成功，结果为 true；否则质疑失败，结果为 false
       data.result = hasOtherCard; 
       this.room.io.to(this.room.id).emit('challenge_result', data); // 通知所有用户质疑
+
+      //延迟4s后，处理质疑结果
+      setTimeout(() => {
+        if(data.result){
+          //质疑成功，上一个出牌的玩家进入轮盘赌
+          this.startRoulette(this.lastPlayerId);
+        }
+        else{
+          this.startRoulette(challengerId);
+        }
+      }, 4000); // 延迟 4 秒
     }
   }
 
 
   startRoulette(playerId) {
     // 开始轮盘赌
+    const roulettePlayer = this.room.players.get(playerId); // 设置轮盘赌的玩家
+    if(roulettePlayer.bullets===roulettePlayer.deadNum){
+      //如果子弹数等于死亡数，直接死亡
+      roulettePlayer.markDead();//标记死亡 
+      this.eliminatedPlayers.push(playerId);//加入淘汰列表
+      this.room.io.to(this.room.id).emit('roulette_result', { playerId: playerId,result:true }); // 通知所有用户
+      
+    }
+    else{
+      this.room.io.to(this.room.id).emit('roulette_result', { playerId: playerId, result:false}); // 通知所有用户
+      
+    }
+    roulettePlayer.bullets-=1; // 子弹数减一
+    // console.log(`轮盘赌结束后，玩家 ${playerId} 的子弹数: ${this.room.players.get(playerId).bullets}`);
+    // 延迟 4 秒后，开始下一轮
+    setTimeout(() => {
+     this.startRound(); // 开始下一轮 
+    },4000);
   }
 
-  handleSpinResult(playerId, hit) {
-    // 处理轮盘赌结果
-  }
+
 
   checkGameOver() {
     // 检查游戏是否结束
@@ -204,7 +272,11 @@ getNextPlayerIndex() {
   }
    handleRobotPlayCards() {
     const player = this.room.players.get(this.currentPlayerInfo.id);
-    const shouldChallenge = Math.random() < 0.5; // 50% 的概率选择质疑
+    let shouldChallenge = Math.random() < 0.5; // 50% 的概率选择质疑
+    if(this.lastPlayerId===null){
+      //如果上一个出牌的玩家id是null，那么这个机器人就不质疑
+      shouldChallenge=false;
+    }
 
     if (shouldChallenge) {
       // 选择质疑

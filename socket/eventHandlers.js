@@ -103,15 +103,16 @@ module.exports = function (socket, io, rooms) {
 
     })
     // 处理质疑请求
-    socket.on('challenge', ({ roomId }) => {
-
-    })
-    //处理信任
-    socket.on('trust', ({ roomId }) => {
-
-    })
-    //进行轮盘赌
-    socket.on('spin_roulette', ({ roomId }) => {
+    socket.on('challenge', ({ playerId,roomId }) => {
+        const room = rooms.get(roomId);
+        if (!room) {
+            socket.emit('error', '房间不存在');
+            console.log(`Room ${roomId} does not exist`); // 打印房间不存在信息
+            return;
+        }else{
+            room.gameManager.handleChallenge(playerId); // 处理质疑
+            //console.log(`Player ${playerId} challenged in room ${roomId}`); // 打印玩家质疑信息
+        }
 
     })
     //离开房间

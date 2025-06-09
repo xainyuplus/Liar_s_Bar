@@ -443,7 +443,7 @@ body {
 }
 
 .gun-animation {
-    animation: gunAnimation 1s ease-in-out forwards;
+    animation: gunAnimation 3s ease-in-out forwards;
 }
 
 /* 底部手牌区域样式，使用固定定位，设置位置、高度、显示方式、背景和内边距 */
@@ -844,3 +844,66 @@ body {
    margin: 5px 0;
    font-size: 14px;
 }
+/* 玩家信息样式 */
+ .player-self {
+         position: fixed;
+         /* 使用固定定位 */
+         left: 20px;
+         /* 距离屏幕左侧 20px */
+         bottom: 20px;
+         /* 距离屏幕底部 20px */
+         display: flex;
+         /* 使用 flex 布局 */
+         flex-direction: column;
+         /* 垂直排列子元素 */
+         align-items: center;
+         /* 子元素水平居中 */
+         background-color: rgba(240, 240, 240, 0.6);
+         ;
+         /* 设置半透明背景 */
+         padding: 15px;
+         /* 添加内边距 */
+         border-radius: 10px;
+         /* 圆角边框 */
+         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+         /* 添加阴影 */
+         z-index: 10;
+         /* 设置 z-index，确保显示在其他元素之上 */
+      }
+
+      .player-self .player-character {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         margin-bottom: 10px;
+         /* 与下方信息区域保持间距 */
+      }
+
+      .player-self .player-info {
+         text-align: center;
+         margin-bottom: 10px;
+         /* 与下方子弹计数器保持间距 */
+      }
+
+      .player-self .bullet-counter {
+         display: flex;
+         align-items: center;
+      }
+
+      .player-self .bullet-display {
+         display: flex;
+         margin-left: 5px;
+         /* 与枪图标保持间距 */
+      }
+
+      .player-self .bullet {
+         display: flex;
+         margin-left: 5px;
+         /* 与枪图标保持间距 */
+
+      }
+
+      .player-self .bullet.used {
+         background-color: #ccc;
+         /* 已使用子弹颜色 */
+      }
