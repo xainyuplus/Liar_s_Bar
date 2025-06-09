@@ -298,7 +298,7 @@
          <!-- 游戏主区域 -->
          <div class="game-main">
             <!-- 第一个对手 -->
-            <div class="opponent" id="opponent1">
+            <div class="opponent" id="opponent2">
                <!-- 对手角色 -->
                <div class="opponent-character">
                   <!-- 对手角色配饰 -->
@@ -336,7 +336,7 @@
                </div>
             </div>
             <!-- 第二个对手 -->
-            <div class="opponent" id="opponent2">
+            <div class="opponent" id="opponent3">
                <!-- 对手角色 -->
                <div class="opponent-character">
                   <!-- 对手角色配饰 -->
@@ -355,7 +355,7 @@
                   <!-- 对手名称 -->
                   <div class="opponent-name">商人老板</div>
                   <!-- 对手牌数量 -->
-                  <div class="opponent-cards">4 张牌</div>
+                  <div class="opponent-cards">5张牌</div>
                </div>
                <!-- 对手子弹计数器 -->
                <div class="bullet-counter">
@@ -367,14 +367,14 @@
                      <div class="bullet"></div>
                      <div class="bullet"></div>
                      <div class="bullet"></div>
-                     <div class="bullet used"></div>
-                     <div class="bullet used"></div>
-                     <div class="bullet used"></div>
+                     <div class="bullet "></div>
+                     <div class="bullet "></div>
+                     <div class="bullet "></div>
                   </div>
                </div>
             </div>
             <!-- 第三个对手，处于激活状态 -->
-            <div class="opponent active" id="opponent3">
+            <div class="opponent active" id="opponent1">
                <!-- 对手角色 -->
                <div class="opponent-character">
                   <!-- 对手角色配饰 -->
@@ -658,6 +658,7 @@
             console.log(opponentName.dataset.player_id);
          }
       });
+      console.log("我执行完了");
    }
 
    // 初始化渲染玩家自身形象和子弹数的函数
@@ -733,7 +734,7 @@
                roundNumber: 0,      // 当前回合数
 
                // 所有玩家信息 - 使用Map存储
-               gameInfo: new Map(),    // playerId -> playerInfo
+               players: new Map(),    // playerId -> playerInfo
                eliminatedPlayers: [], // 已淘汰玩家ID集合
 
                // 我的信息
@@ -860,9 +861,15 @@
                   });
                } else {
                   document.getElementById('playersDiv').remove();
+                  
+                  socket.emit('start_game', { roomId: gameState.roomInfo.roomId }); // 发送开始游戏请求
                   // 加载游戏页面
                   showScreenWithLoading('game', '加载游戏页面中');
-                  socket.emit('start_game', { roomId: gameState.roomInfo.roomId }); // 发送开始游戏请求
+                  //延迟一秒后
+                  setTimeout(() => {
+                     // 加载游戏页面
+                     showScreenWithLoading('game', '更新角色形象中'); 
+                  },1000);
                }
             }
             else {
@@ -1087,6 +1094,24 @@
       // 根据 phase 控制 UI 显示
       updateUI();
    });
+   
+   socket.on('cards_played', (data) => {
+      if(data.playerId===gameState.playerInfo.id){
+        //是自己出的牌，不需要动画 
+      }
+      else{
+         playOpponentCards(data.playerId, data.cardsNum);
+      }
+   });
+socket.on('challenge_result', (data) => {
+   showGameEventMessage("收到了质疑结果");}
+   //首先触发质疑动画
+   //接着触发翻牌动画
+   //接着触发成功/失败动画
+)
+
+
+
    //接下来首先把game界面自身的一些测试函数给去掉
    //然后呢，我们就去写发牌，取牌，出牌等等的前后端逻辑，确保能玩
    //至于页面上需要调整的，到时候再说吧
@@ -1733,6 +1758,8 @@
       }
    });
 
+
+   //这是之前的版本，要改掉，拆分成1.质疑动画2.翻牌动画3.成功/失败动画
    //翻转牌，并通过判断是否渲染开枪动画
    function challenge() {
 
@@ -1851,6 +1878,8 @@
 
       allOpponentElements.forEach(opponentElement => {
          //确定当前玩家
+         //console.log("我开始执行了");
+         //所以应该不是次序的问题
          const opponentName = opponentElement.querySelector('.opponent-name');
          const playerId = opponentName?.dataset.player_id;
          if (playerId === String(currentPlayerId)) {
@@ -1863,7 +1892,7 @@
          //我知道为什么了，就是因为update函数居然发生在游戏角色初始化之前
          //那么这样铁定被重绘啊
          // 更新每个对手手牌数
-         const opponentInfo = gameState.gameManager.gameInfo.get(playerId);
+         const opponentInfo = gameState.gameManager.players.get(playerId);
          if (opponentInfo) {
             const opponentCards = opponentElement.querySelector('.opponent-cards');
             if (opponentCards) {
@@ -1885,7 +1914,10 @@
       if (playerSelf) {
          const playerCards = playerSelf.querySelector('.player-cards');
          if (playerCards) {
-            playerCards.textContent = `${gameState.gameManager.hands.length} 张牌`;
+            playerCards.textContent = `${gameState.gameManager.players.get(gameState.playerInfo.id).handCount} 张牌`;
+         }
+         else {
+            console.log(`未找到玩家 ${playerId} 的信息`); 
          }
 
          // 更新玩家自身剩余子弹数
@@ -1899,7 +1931,124 @@
       }
    }
 
+ // 处理其他玩家出牌动画的函数
+ // 处理对手出牌动画的函数
 
+// 处理对手出牌动画的函数
+// 处理对手出牌动画的函数
+function playOpponentCards(playerId, cardsCount) {
+    if (cardsCount <= 0) return;
+    
+    // 1. 找到对手元素
+    const opponentElement = document.querySelector(`.opponent-name[data-player_id="${playerId}"]`);
+    if (!opponentElement) {
+        console.error(`找不到玩家 ${playerId} 的元素`);
+        return;
+    }
+    
+    const opponentContainer = opponentElement.closest('.opponent');
+    const playedCardsArea = document.getElementById('playedCards');
+    
+    // 2. 清除桌面现有卡牌
+    if (playedCardsArea.querySelector('p')) {
+        playedCardsArea.innerHTML = '';
+    }
+    
+    // 3. 计算目标位置（桌面中央的卡牌排列位置）
+    const cardWidth = 70;
+    const gap = 8;
+    const totalWidth = cardsCount * cardWidth + (cardsCount - 1) * gap;
+    const startX = (playedCardsArea.offsetWidth - totalWidth) / 2;
+    
+    const targetPositions = [];
+    for (let i = 0; i < cardsCount; i++) {
+        targetPositions.push({
+            x: startX + i * (cardWidth + gap),
+            y: playedCardsArea.offsetHeight - 150
+        });
+    }
+    
+    // 4. 计算对手位置相对于桌面的坐标
+    const opponentRect = opponentContainer.getBoundingClientRect();
+    const playedCardsRect = playedCardsArea.getBoundingClientRect();
+    const startX_relative = opponentRect.left - playedCardsRect.left + opponentRect.width / 2;
+    const startY_relative = opponentRect.top - playedCardsRect.top + opponentRect.height / 2;
+    
+    // 5. 创建临时卡牌并设置起始位置
+    const tempCards = [];
+    for (let i = 0; i < cardsCount; i++) {
+        // 创建卡牌元素
+        const cardContainer = document.createElement('div');
+        cardContainer.className = 'hand-card';
+        cardContainer.style.position = 'absolute';
+        cardContainer.style.left = `${startX_relative}px`;
+        cardContainer.style.top = `${startY_relative}px`;
+        cardContainer.style.zIndex = '10';
+        
+        // 创建卡牌画布
+        const canvas = document.createElement('canvas');
+        canvas.width = 70;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(cardImages['back'], 0, 0, canvas.width, canvas.height);
+        
+        cardContainer.appendChild(canvas);
+        playedCardsArea.appendChild(cardContainer);
+        tempCards.push(cardContainer);
+    }
+    
+    // 6. 执行动画
+    animateOpponentCards(tempCards, targetPositions, () => {
+        // 动画完成后的回调
+        tempCards.forEach(card => card.remove());
+        
+        // 在桌面显示最终的卡牌背面
+        playedCardsArea.innerHTML = '';
+        for (let i = 0; i < cardsCount; i++) {
+            initDeckCanvas();
+        }
+        playedCardsArea.style.visibility = 'visible';
+    });
+}
+
+// 对手卡牌动画函数
+function animateOpponentCards(cards, targetPositions, callback) {
+    const duration = 800;
+    const startTime = performance.now();
+    
+    // 获取起始位置
+    const startPositions = cards.map(card => ({
+        x: parseFloat(card.style.left),
+        y: parseFloat(card.style.top)
+    }));
+    
+    function animate(currentTime) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const easeProgress = easeOutCubic(progress);
+        
+        cards.forEach((card, index) => {
+            const startPos = startPositions[index];
+            const targetPos = targetPositions[index];
+            
+            // 计算当前位置
+            const currentX = startPos.x + (targetPos.x - startPos.x) * easeProgress;
+            const currentY = startPos.y + (targetPos.y - startPos.y) * easeProgress;
+            
+            // 更新卡牌位置
+            card.style.left = `${currentX}px`;
+            card.style.top = `${currentY}px`;
+        });
+        
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            callback();
+        }
+    }
+    
+    requestAnimationFrame(animate);
+}
 
    loadImages();
 

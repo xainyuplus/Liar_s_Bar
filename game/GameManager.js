@@ -87,7 +87,7 @@ getNextPlayerIndex() {
 
       this.lastPlayedCards = cards; // 更新上一次出的牌
       this.lastPlayerId = playerId; // 更新上一个出牌的玩家ID
-      //this.room.io.to(this.room.id).emit('cards_played', { playerId: playerId, cardsNum: cards.length }); // 通知所有用户出牌
+      this.room.io.to(this.room.id).emit('cards_played', { playerId: playerId, cardsNum: cards.length }); // 通知所有用户出牌
       this.nextTurn(); // 切换到下一个玩家
     }
 
@@ -99,7 +99,22 @@ getNextPlayerIndex() {
       return; // 不是当前玩家，不处理 
     }
     else {
-      this.room.io.to(this.room.id).emit('challenge_result', { playerId: challengerId }); // 通知所有用户质疑
+      //这个事件包括1.质疑者id，上次出的牌，上一个出牌的玩家id，质疑结果
+      //是true或者false
+      const data={
+        challengerId:challengerId,
+        lastPlayedCards:this.lastPlayedCards,
+        lastPlayerId:this.lastPlayerId,
+        result:null
+      }
+      //这里有个判断质疑结果的部分
+      // 检查上一次出的牌中是否存在目标牌和小丑牌之外的牌
+      const hasOtherCard = this.lastPlayedCards.some(card => 
+        card.value!== this.targetCard && card.value!== 'joker'
+      );
+      // 如果存在其他牌，质疑成功，结果为 true；否则质疑失败，结果为 false
+      data.result = hasOtherCard; 
+      this.room.io.to(this.room.id).emit('challenge_result', data); // 通知所有用户质疑
     }
   }
 

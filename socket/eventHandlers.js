@@ -64,7 +64,7 @@ module.exports = function (socket, io, rooms) {
              // 延迟 2 秒后调用 room.startGame()，等待玩家形象绘制完成
         setTimeout(() => {
             room.startGame(); // 开始游戏
-        }, 2000);
+        }, 3000);
         }
 
     })
