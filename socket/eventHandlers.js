@@ -58,9 +58,13 @@ module.exports = function (socket, io, rooms) {
             return;
         }
         else {
-            room.startGame(); // 开始游戏
+            
             io.to(roomId).emit('game_started', roomId); // 通知所有用户游戏已开始
             console.log(`Game started in room ${roomId}`); // 打印游戏开始信息 
+             // 延迟 2 秒后调用 room.startGame()，等待玩家形象绘制完成
+        setTimeout(() => {
+            room.startGame(); // 开始游戏
+        }, 2000);
         }
 
     })

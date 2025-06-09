@@ -12,6 +12,70 @@
    <link rel="stylesheet" href="./CSS/game.css">
    <link rel="stylesheet" href="./CSS/main.css">
    <!-- 这几个CSS其实是有冲突的，要想办法消除一下，现在算了-->
+   <style>
+      .player-self {
+         position: fixed;
+         /* 使用固定定位 */
+         left: 20px;
+         /* 距离屏幕左侧 20px */
+         bottom: 20px;
+         /* 距离屏幕底部 20px */
+         display: flex;
+         /* 使用 flex 布局 */
+         flex-direction: column;
+         /* 垂直排列子元素 */
+         align-items: center;
+         /* 子元素水平居中 */
+         background-color: rgba(240, 240, 240, 0.6);
+         ;
+         /* 设置半透明背景 */
+         padding: 15px;
+         /* 添加内边距 */
+         border-radius: 10px;
+         /* 圆角边框 */
+         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+         /* 添加阴影 */
+         z-index: 10;
+         /* 设置 z-index，确保显示在其他元素之上 */
+      }
+
+      .player-self .player-character {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         margin-bottom: 10px;
+         /* 与下方信息区域保持间距 */
+      }
+
+      .player-self .player-info {
+         text-align: center;
+         margin-bottom: 10px;
+         /* 与下方子弹计数器保持间距 */
+      }
+
+      .player-self .bullet-counter {
+         display: flex;
+         align-items: center;
+      }
+
+      .player-self .bullet-display {
+         display: flex;
+         margin-left: 5px;
+         /* 与枪图标保持间距 */
+      }
+
+      .player-self .bullet {
+         display: flex;
+         margin-left: 5px;
+         /* 与枪图标保持间距 */
+
+      }
+
+      .player-self .bullet.used {
+         background-color: #ccc;
+         /* 已使用子弹颜色 */
+      }
+   </style>
 </head>
 <!-- 加载所有JavaScript模块 -->
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -177,6 +241,44 @@
    </div>
    <div id="game-screen" style=" z-index: 1;" class="screen hidden">
       <div class="game-container">
+         <!-- 玩家自身区域 -->
+         <div class="player-self" id="playerSelf">
+            <!-- 玩家角色 -->
+            <div class="player-character">
+               <!-- 玩家角色配饰 -->
+               <div class="character-accessory">🎩</div>
+               <!-- 玩家角色头部 -->
+               <div class="character-head">😁</div>
+               <!-- 玩家角色衣服 -->
+               <div class="character-clothes">👗</div>
+               <!-- 玩家角色左侧物品 -->
+               <div class="character-item-left">💰</div>
+               <!-- 玩家角色右侧物品 -->
+               <div class="character-item-right">🗝️</div>
+            </div>
+            <!-- 玩家信息 -->
+            <div class="player-info">
+               <!-- 玩家名称 -->
+               <div class="player-name">玩家</div>
+               <!-- 玩家牌数量 -->
+               <div class="player-cards">5 张牌</div>
+            </div>
+            <!-- 玩家子弹计数器 -->
+            <div class="bullet-counter">
+               <!-- 枪图标 -->
+               <span>🔫</span>
+               <!-- 子弹显示区域 -->
+               <div class="bullet-display">
+                  <!-- 6 颗未使用的子弹 -->
+                  <div class="bullet"></div>
+                  <div class="bullet"></div>
+                  <div class="bullet"></div>
+                  <div class="bullet"></div>
+                  <div class="bullet"></div>
+                  <div class="bullet"></div>
+               </div>
+            </div>
+         </div>
          <!-- 倒计时器 -->
          <div class="timer-area">
             <!-- 倒计时显示区域，初始值为 30 -->
@@ -557,6 +659,41 @@
          }
       });
    }
+
+   // 初始化渲染玩家自身形象和子弹数的函数
+   function renderPlayerSelf() {
+      const playerSelf = document.getElementById('playerSelf');
+      const playerInfo = gameState.playerInfo;
+      const gameManager = gameState.gameManager;
+
+      // 更新玩家名称
+      const playerName = playerSelf.querySelector('.player-name');
+      playerName.textContent = playerInfo.name;
+
+      // 更新玩家角色形象
+      const playerCharacterHead = playerSelf.querySelector('.character-head');
+      const playerCharacterClothes = playerSelf.querySelector('.character-clothes');
+      const playerCharacterAccessory = playerSelf.querySelector('.character-accessory');
+      const playerCharacterItemLeft = playerSelf.querySelector('.character-item-left');
+      const playerCharacterItemRight = playerSelf.querySelector('.character-item-right');
+
+      playerCharacterHead.textContent = expressions[playerInfo.OverLook[0]];
+      playerCharacterClothes.textContent = clothes[playerInfo.OverLook[1]];
+      playerCharacterAccessory.textContent = accessories[playerInfo.OverLook[2]];
+      playerCharacterItemLeft.textContent = leftItems[playerInfo.OverLook[3]];
+      playerCharacterItemRight.textContent = rightItems[playerInfo.OverLook[4]];
+
+      // 更新玩家牌数量
+      const playerCards = playerSelf.querySelector('.player-cards');
+      playerCards.textContent = `${gameManager.hands.length} 张牌`;
+
+      // 更新玩家子弹数（假设初始 6 颗子弹，可根据实际情况修改）
+      const bullets = playerSelf.querySelectorAll('.bullet');
+      const remainingBullets = gameState.gameManager.bullets; // 这里需要根据实际游戏逻辑修改
+      bullets.forEach((bullet, index) => {
+         bullet.classList.toggle('used', index >= remainingBullets);
+      });
+   }
    class GameState {
       constructor() {
          this.playerInfo = {
@@ -601,6 +738,7 @@
 
                // 我的信息
                hands: [],           // 我的手牌数组
+               bullets: 6,           // 我的子弹数
 
 
                // 桌面信息
@@ -649,46 +787,6 @@
    //后端将返回房间id，此时前端生成一个类似弹窗的页面，显示id和已经加入房间的人，还有x号
    //点击x号会有提示，之后退出房间，向后端发信息，之后房间销毁
    //人数达到4个后点击确定可以开始游戏，也可以点击人机模式，之后进入游戏页面
-   class gamemanager {
-      constructor() {
-         this.targetCard = "?";
-         this.hands = [];
-         this.round = 1;
-
-      }
-   }
-   roomInfo = {
-      roomId: "房间id",
-      playerList: [
-      ],
-      updateList: function (playerList) {
-         this.playerList = playerList;
-         //更新玩家列表
-         Array.from(document.getElementById('playersDiv').querySelectorAll('#avatarsContainer img')).forEach((img, index) => {
-            if (index < playerList.length) {
-               img.src = `./assets/images/avatars/${playerList[index].avatar}`; // 更新头像
-               img.alt = playerList[index].name; // 更新名字 
-            }
-            else {
-               img.src = `./assets/images/avatars/avatar0.png`; // 更新头像
-               img.alt = ""; // 更新名字 
-            }
-         })
-      },
-      gamemanager: new gamemanager()
-   }
-
-
-   const thisplayerInfo = {
-      id: "玩家id",
-      name: "玩家名字",
-      avatar: "avatar1.png",
-      isHost: true,
-      isRobot: false
-   };
-   //这里的isHost是有问题的，应该在创建房间后才能赋予房主身份
-   //这里还要补充一个储存形象的数组呢
-
 
    //下面的创建房间啊之类的方法日后也能放在gameState里？
    function createRoom() {
@@ -756,6 +854,8 @@
                      document.getElementById('playersDiv').remove();
                      // 加载游戏页面
                      showScreenWithLoading('game', '加载游戏页面中');
+                     
+
                      socket.emit('start_game', { roomId: gameState.roomInfo.roomId }); // 发送开始游戏请求
                   });
                } else {
@@ -926,7 +1026,7 @@
 
       })
       console.log("游戏开始");
-
+      renderPlayerSelf();
       const opponentInfos = gameState.roomInfo.playerList.filter(player => player.id !== gameState.playerInfo.id);; //获取对手信息
       updateGameOpponentInfo(opponentInfos);
    });
@@ -1721,8 +1821,10 @@
       //会根据gameState来更新UI 
       const playBtn = document.getElementById('playBtn');
       const challengeBtn = document.getElementById('challengeBtn');
+      const selectionInfo = document.getElementById('selectionInfo');
       const currentPlayerId = gameState.gameManager.currentPlayerId;
       const myPlayerId = gameState.playerInfo.id;
+
       //好神奇，为什么我的ID变成robot了？
       //我想我知道了，因为robot加入房间也会发送room_joined消息，所以会更新id
       showGameEventMessage(`当前玩家ID:${currentPlayerId}`);
@@ -1737,15 +1839,18 @@
       if (!isMyTurn) {
          playBtn.classList.add('opacity-50', 'cursor-not-allowed');
          challengeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+         selectionInfo.textContent = "不是你的回合";
 
       } else {
          playBtn.classList.remove('opacity-50', 'cursor-not-allowed');
          challengeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+         selectionInfo.textContent = "你的回合，请选择";
          showGameEventMessage("你的回合开始了");
       }
       const allOpponentElements = document.querySelectorAll('.opponent');
 
       allOpponentElements.forEach(opponentElement => {
+         //确定当前玩家
          const opponentName = opponentElement.querySelector('.opponent-name');
          const playerId = opponentName?.dataset.player_id;
          if (playerId === String(currentPlayerId)) {
@@ -1754,10 +1859,47 @@
          } else {
             opponentElement.classList.remove('active');
          }
+         //下面这些似乎没有正常运行，而且在回合开始的时候也没有运行，不理解
+         //我知道为什么了，就是因为update函数居然发生在游戏角色初始化之前
+         //那么这样铁定被重绘啊
+         // 更新每个对手手牌数
+         const opponentInfo = gameState.gameManager.gameInfo.get(playerId);
+         if (opponentInfo) {
+            const opponentCards = opponentElement.querySelector('.opponent-cards');
+            if (opponentCards) {
+               opponentCards.textContent = `${opponentInfo.handCount} 张牌`;
+            }
+
+            // 更新每个对手剩余子弹数
+            const opponentBullets = opponentElement.querySelectorAll('.bullet');
+            opponentBullets.forEach((bullet, index) => {
+               bullet.classList.toggle('used', index >= opponentInfo.bulletCount);
+            });
+         }
+         else {
+            console.log(`未找到玩家 ${playerId} 的信息`);
+         }
+
       });
+      const playerSelf = document.getElementById('playerSelf');
+      if (playerSelf) {
+         const playerCards = playerSelf.querySelector('.player-cards');
+         if (playerCards) {
+            playerCards.textContent = `${gameState.gameManager.hands.length} 张牌`;
+         }
+
+         // 更新玩家自身剩余子弹数
+         const playerBullets = playerSelf.querySelectorAll('.bullet');
+         playerBullets.forEach((bullet, index) => {
+            bullet.classList.toggle('used', index >= gameState.gameManager.bullets);
+         });
+      }
+      else {
+         console.log(`未找到玩家 ${playerId} 的信息`); 
+      }
    }
 
-  
+
 
    loadImages();
 
