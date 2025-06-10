@@ -155,23 +155,28 @@
       </div>
    </div>
 
-   <div id="room-wating" style="z-index: 2;">
-      <div id="playersDiv" style="display: none; flex-direction: column; align-items: center; position: relative;">
-         <button id="closeButton"
-            style="position: absolute; top: 10px; right: 10px; font-size: 24px; border: none; cursor: pointer;">×</button><span
-            id="roomIDspan"></span>
-         <div id="avatarsContainer" style="display: flex; justify-content: space-around; width: 100%;">
-            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
-            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
-            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
-            <img src="./assets/images/avatars/avatar0.png" style="width: 60px; height: 60px; margin: 10px;">
-         </div>
-         <div id="namesContainer" style="display: flex; justify-content: space-around; width: 100%;"><span
-               style="margin: 10px;">玩家1</span><span style="margin: 10px;">玩家2</span><span
-               style="margin: 10px;">玩家3</span><span style="margin: 10px;">玩家4</span></div><button
-            id="startButton">开始游戏</button>
-      </div>
-   </div>
+   <div id="room-wating" style="z-index: 2; position: absolute;top: 0%;left: 35%;">
+         <div id="playersDiv" style="display: none; flex-direction: column; align-items: center; position: relative;background: rgba(255, 255, 255, 0.95);border-radius: 30px;
+  padding: 30px;width: 400px; border: 2px solid #FF6B35;">
+             <button id="closeButton"      
+            style="position: absolute; top: 10px; right: 10px; font-size: 24px; cursor: pointer; background-color: #F7931E;">×</button><span
+                  id="roomIDspan"></span>
+             <div id="avatarsContainer" style="display: flex; justify-content: space-around; width: 100%;">
+                  <img src="./assets/images/avatars/avatar0.png"
+               style="width: 60px; height: 60px; margin: 10px;">
+                     <img src="./assets/images/avatars/avatar0.png"
+                  style="width: 60px; height: 60px; margin: 10px;">
+                        <img src="./assets/images/avatars/avatar0.png"
+                     style="width: 60px; height: 60px; margin: 10px;">
+                      <img src="./assets/images/avatars/avatar0.png"
+                        style="width: 60px; height: 60px; margin: 10px;">
+                     </div>
+         <div id="namesContainer" style="display: flex; justify-content: space-around; width: 100%;"><span  
+               style="margin: 10px;">玩家1</span><span style="margin: 10px;">玩家2</span><span       
+               style="margin: 10px;">玩家3</span><span style="margin: 10px;">玩家4</span></div><button      
+            id="startButton" style="background-color: #F7931E;">开始游戏</button>
+            </div>
+       </div>
 
    <div id="loading-overlay" style="z-index: 3;">
       <div class="spinner"></div>
@@ -703,7 +708,7 @@
    async function initPlayerInfo() {
       try {
          // 从服务器端获取名字与ID与头像的函数 
-         const response = await fetch('http://localhost:3000/getRandomIdentity');
+         const response = await fetch('/getRandomIdentity');
          // 检查响应状态是否正常
          if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -1133,7 +1138,7 @@
                timer: 1500
             });
          }
-      },2000);
+      }, 2000);
 
 
       //然后其实就是下一轮了，更新UI会放在那里
@@ -1147,7 +1152,7 @@
          icon: 'success',
          showConfirmButton: false,
          timer: 2000
-      }); 
+      });
    })
    //进行开枪
    function gun(playerId, result) {
@@ -1917,6 +1922,7 @@
          //下面这些似乎没有正常运行，而且在回合开始的时候也没有运行，不理解
          //我知道为什么了，就是因为update函数居然发生在游戏角色初始化之前
          //那么这样铁定被重绘啊
+         
          // 更新每个对手手牌数
          const opponentInfo = gameState.gameManager.players.get(playerId);
          if (opponentInfo) {

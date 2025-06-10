@@ -79,6 +79,6 @@ app.get('/getRandomIdentity', (req, res) => {
 
 // 启动服务器
 server.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running at ${port}`);
 });
 //这里之前写的是app.listen,是不行的，必须server

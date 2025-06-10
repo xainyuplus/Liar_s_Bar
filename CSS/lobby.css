@@ -149,12 +149,13 @@ body {
     }
 }
 
-.character-container {
+
+.character-display .character-container {
     position: relative;
     z-index: 2;
 }
 
-.character-avatar {
+.character-display .character-avatar {
     position: relative;
     width: 200px;
     height: 220px;
@@ -166,30 +167,29 @@ body {
 }
 
 /* 角色组件容器 */
-.character-head {
+.character-display .character-head {
     font-size: 42px;
     margin-bottom: -8px;
     z-index: 4;
     animation: gentle-bounce 3s ease-in-out infinite;
 }
 
-.character-accessory {
+.character-display .character-accessory {
     position: absolute;
     top: 16px;
-
     font-size: 40px;
     z-index: 5;
     animation: gentle-bounce 3s ease-in-out infinite 0.2s;
 }
 
-.character-clothes {
+.character-display .character-clothes {
     font-size: 70px;
     margin-top: -15px;
     z-index: 3;
     animation: gentle-bounce 3s ease-in-out infinite 0.1s;
 }
 
-.character-item-left {
+.character-display .character-item-left {
     position: absolute;
     top: 55%;
     left: 45px;
@@ -198,7 +198,7 @@ body {
     animation: gentle-float 5s ease-in-out infinite;
 }
 
-.character-item-right {
+.character-display .character-item-right {
     position: absolute;
     top: 55%;
     right: 45px;
@@ -206,6 +206,8 @@ body {
     z-index: 5;
     animation: gentle-float 5s ease-in-out infinite 1s;
 }
+
+
 
 @keyframes gentle-bounce {
 

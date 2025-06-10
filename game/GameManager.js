@@ -119,7 +119,7 @@ getNextPlayerIndex() {
     }
     else {
       const player = this.room.players.get(playerId);
-      cards.forEach((id,value) => {
+      cards.forEach(({id,value}) => {
         if(player.hand.find(card => card.id === id)){
           player.removeCard(id);
         }
